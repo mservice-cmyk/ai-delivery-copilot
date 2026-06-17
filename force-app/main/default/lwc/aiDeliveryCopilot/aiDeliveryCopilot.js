@@ -69,7 +69,8 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             description: 'Prepare comprehensive customer meeting materials and talking points',
             icon: 'utility:groups',
             iconColor: 'slds-icon-text-success',
-            context: 'meeting_prep'
+            context: 'meeting_prep',
+            isNavigate: true
         },
         {
             id: 'deployment-checklist',
@@ -103,6 +104,8 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
                 this.navigateToExecutiveStatusGenerator();
             } else if (actionId === 'raid-log') {
                 this.navigateToRAIDGenerator();
+            } else if (actionId === 'meeting-prep') {
+                this.navigateToCustomerMeetingPrep();
             }
             return;
         }
@@ -150,6 +153,15 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             type: 'standard__component',
             attributes: {
                 componentName: 'c__aiRaidGenerator'
+            }
+        });
+    }
+
+    navigateToCustomerMeetingPrep() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__component',
+            attributes: {
+                componentName: 'c__aiCustomerMeetingPrep'
             }
         });
     }

@@ -1,0 +1,433 @@
+<template>
+    <div class="meeting-prep-container">
+        <!-- Header -->
+        <div class="meeting-prep-header">
+            <lightning-icon icon-name="utility:groups" size="medium" class="header-icon"></lightning-icon>
+            <div class="header-text">
+                <h1 class="slds-text-heading_large">Customer Meeting Prep</h1>
+                <p class="slds-text-body_small slds-text-color_weak">Prepare comprehensive customer meeting materials and talking points</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+            <!-- Input Card -->
+            <div class="slds-col slds-size_1-of-1">
+                <lightning-card title="Meeting Preparation Inputs" icon-name="utility:info">
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- Customer Name -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Customer Name"
+                                    value={customerName}
+                                    onchange={handleCustomerNameChange}
+                                    placeholder="Enter customer name..."
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Industry -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-combobox
+                                    label="Industry"
+                                    value={industry}
+                                    placeholder="Select industry..."
+                                    options={industryOptions}
+                                    onchange={handleIndustryChange}
+                                    required>
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Meeting Type -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-combobox
+                                    label="Meeting Type"
+                                    value={meetingType}
+                                    placeholder="Select meeting type..."
+                                    options={meetingTypeOptions}
+                                    onchange={handleMeetingTypeChange}
+                                    required>
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Salesforce Products -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-dual-listbox
+                                    label="Salesforce Products"
+                                    source-label="Available"
+                                    selected-label="Selected"
+                                    options={salesforceProductOptions}
+                                    value={selectedProducts}
+                                    onchange={handleProductChange}
+                                    required>
+                                </lightning-dual-listbox>
+                            </div>
+
+                            <!-- Customer Goals -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Customer Goals"
+                                    value={customerGoals}
+                                    onchange={handleCustomerGoalsChange}
+                                    placeholder="Describe the customer's business goals and objectives..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Known Challenges -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Known Challenges"
+                                    value={knownChallenges}
+                                    onchange={handleKnownChallengesChange}
+                                    placeholder="List any known challenges, pain points, or concerns..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="slds-m-top_medium slds-text-align_center">
+                            <lightning-button
+                                label="✨ Generate Meeting Brief"
+                                variant="brand"
+                                onclick={handleGenerate}
+                                disabled={isGenerateDisabled}
+                                class="generate-button">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-card>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <template if:true={showResults}>
+            <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+
+                <!-- Meeting Readiness Score -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Meeting Readiness Score" icon-name="utility:metrics">
+                        <div class="slds-p-around_medium">
+                            <div class="readiness-score-container">
+                                <div class="score-ring">
+                                    <svg viewBox="0 0 100 100" class="progress-ring">
+                                        <circle cx="50" cy="50" r="45" class="progress-ring-bg"></circle>
+                                        <circle cx="50" cy="50" r="45" class="progress-ring-circle" style={progressCircleStyle}></circle>
+                                    </svg>
+                                    <div class="score-text">
+                                        <div class="score-value">{meetingResults.readinessScore}</div>
+                                        <div class="score-label">Ready</div>
+                                    </div>
+                                </div>
+                                <div class="score-description">
+                                    <p class="slds-text-body_regular">
+                                        {readinessMessage}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Executive Summary -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card icon-name="utility:description">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={executiveSummaryIcon}
+                                variant="bare"
+                                onclick={toggleExecutiveSummary}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Executive Summary</span>
+                        </div>
+                        <div slot="actions">
+                            <lightning-button
+                                label="Clear Results"
+                                onclick={handleClearResults}
+                                variant="neutral">
+                            </lightning-button>
+                        </div>
+                        <template if:true={showExecutiveSummary}>
+                            <div class="slds-p-around_medium">
+                                <p class="section-content">{meetingResults.executiveSummary}</p>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Customer Business Objectives -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:goals">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={businessObjectivesIcon}
+                                variant="bare"
+                                onclick={toggleBusinessObjectives}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Customer Business Objectives</span>
+                        </div>
+                        <template if:true={showBusinessObjectives}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.businessObjectives} for:item="objective">
+                                        <li key={objective.id} class="list-item">{objective.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Suggested Discovery Questions -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:question_mark">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={discoveryQuestionsIcon}
+                                variant="bare"
+                                onclick={toggleDiscoveryQuestions}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Suggested Discovery Questions</span>
+                        </div>
+                        <template if:true={showDiscoveryQuestions}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.discoveryQuestions} for:item="question">
+                                        <li key={question.id} class="list-item">{question.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Recommended Talking Points -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:comments">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={talkingPointsIcon}
+                                variant="bare"
+                                onclick={toggleTalkingPoints}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Recommended Talking Points</span>
+                        </div>
+                        <template if:true={showTalkingPoints}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.talkingPoints} for:item="point">
+                                        <li key={point.id} class="list-item">{point.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Risks to Discuss -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:warning">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={risksIcon}
+                                variant="bare"
+                                onclick={toggleRisks}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Risks to Discuss</span>
+                        </div>
+                        <template if:true={showRisks}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.risks} for:item="risk">
+                                        <li key={risk.id} class="list-item">{risk.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Salesforce Product Recommendations -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card icon-name="utility:salesforce1">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={productRecommendationsIcon}
+                                variant="bare"
+                                onclick={toggleProductRecommendations}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Salesforce Product Recommendations</span>
+                        </div>
+                        <template if:true={showProductRecommendations}>
+                            <div class="slds-p-around_medium">
+                                <template for:each={meetingResults.productRecommendations} for:item="product">
+                                    <div key={product.id} class="product-card">
+                                        <h3 class="product-title">{product.name}</h3>
+                                        <p class="product-description">{product.description}</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Cross-Sell / Expansion Opportunities -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:expand">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={expansionIcon}
+                                variant="bare"
+                                onclick={toggleExpansion}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Cross-Sell / Expansion Opportunities</span>
+                        </div>
+                        <template if:true={showExpansion}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.expansionOpportunities} for:item="opportunity">
+                                        <li key={opportunity.id} class="list-item">{opportunity.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Architecture Discussion Topics -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:builder">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={architectureIcon}
+                                variant="bare"
+                                onclick={toggleArchitecture}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Architecture Discussion Topics</span>
+                        </div>
+                        <template if:true={showArchitecture}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.architectureTopics} for:item="topic">
+                                        <li key={topic.id} class="list-item">{topic.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Demo Recommendations -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:video">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={demoIcon}
+                                variant="bare"
+                                onclick={toggleDemo}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Demo Recommendations</span>
+                        </div>
+                        <template if:true={showDemo}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.demoRecommendations} for:item="demo">
+                                        <li key={demo.id} class="list-item">{demo.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Recommended Next Steps -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card icon-name="utility:forward">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={nextStepsIcon}
+                                variant="bare"
+                                onclick={toggleNextSteps}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Recommended Next Steps</span>
+                        </div>
+                        <template if:true={showNextSteps}>
+                            <div class="slds-p-around_medium">
+                                <ul class="content-list">
+                                    <template for:each={meetingResults.nextSteps} for:item="step">
+                                        <li key={step.id} class="list-item">{step.description}</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+                <!-- Follow-up Email Summary -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card icon-name="utility:email">
+                        <div slot="title">
+                            <lightning-button-icon
+                                icon-name={emailIcon}
+                                variant="bare"
+                                onclick={toggleEmail}
+                                alternative-text="Toggle section"
+                                class="section-toggle">
+                            </lightning-button-icon>
+                            <span class="section-title">Follow-up Email Summary</span>
+                        </div>
+                        <template if:true={showEmail}>
+                            <div class="slds-p-around_medium">
+                                <div class="email-content">
+                                    <p><strong>Subject:</strong> {meetingResults.followUpEmail.subject}</p>
+                                    <div class="email-body">{meetingResults.followUpEmail.body}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </lightning-card>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Generating meeting brief..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-m-top_medium">
+                        Generating meeting brief...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
