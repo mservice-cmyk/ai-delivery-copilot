@@ -6,7 +6,6 @@
     </brand>
     <description>AI-powered tool to accelerate Salesforce delivery activities for consultants</description>
     <formFactors>Small</formFactors>
-    <formFactors>Medium</formFactors>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
@@ -16,5 +15,4 @@
     <tabs>AI_Delivery_Copilot</tabs>
     <tabs>standard-home</tabs>
     <uiType>Lightning</uiType>
-    <utilityBar>AI_Delivery_Copilot_UtilityBar</utilityBar>
 </CustomApplication>

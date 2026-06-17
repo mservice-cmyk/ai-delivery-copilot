@@ -10,9 +10,4 @@
         <target>lightningCommunity__Page</target>
         <target>lightningCommunity__Default</target>
     </targets>
-    <targetConfigs>
-        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
-            <property name="title" type="String" default="AI Delivery Copilot" label="Component Title" description="Title displayed in the component header"/>
-        </targetConfig>
-    </targetConfigs>
 </LightningComponentBundle>

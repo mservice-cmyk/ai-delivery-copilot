@@ -22,10 +22,6 @@
     <masterLabel>AI Delivery Copilot Home</masterLabel>
     <template>
         <name>flexipage:appHomeTemplateHeaderTwoColumnsLeftSidebar</name>
-        <properties>
-            <name>enablePageActionOnHeader</name>
-            <value>false</value>
-        </properties>
     </template>
     <type>AppPage</type>
 </FlexiPage>
