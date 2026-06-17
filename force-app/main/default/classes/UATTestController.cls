@@ -16,7 +16,7 @@ public with sharing class UATTestController {
         try {
             // Validate required inputs
             if (String.isBlank(userStory)) {
-                throw new AuraHandledException('User Story is required');
+                throw new IllegalArgumentException('User Story is required');
             }
 
             // Build request
