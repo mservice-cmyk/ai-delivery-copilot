@@ -14,6 +14,11 @@ public with sharing class UATTestController {
     @AuraEnabled
     public static String generateTestCases(String userStory, String acceptanceCriteria) {
         try {
+            // Validate required inputs
+            if (String.isBlank(userStory)) {
+                throw new AuraHandledException('User Story is required');
+            }
+
             // Build request
             UATTestCaseGenerator.UATTestRequest request =
                 new UATTestCaseGenerator.UATTestRequest();

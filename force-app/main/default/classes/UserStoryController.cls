@@ -21,6 +21,17 @@ public with sharing class UserStoryController {
         String objects
     ) {
         try {
+            // Validate required inputs
+            if (String.isBlank(businessRequirement)) {
+                throw new AuraHandledException('Business Requirement is required');
+            }
+            if (String.isBlank(persona)) {
+                throw new AuraHandledException('Persona is required');
+            }
+            if (String.isBlank(businessProcess)) {
+                throw new AuraHandledException('Business Process is required');
+            }
+
             // Build request
             UserStoryGenerator.UserStoryRequest request = new UserStoryGenerator.UserStoryRequest();
             request.businessRequirement = businessRequirement;

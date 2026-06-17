@@ -38,14 +38,18 @@ public with sharing class UserStoryGenerator {
     private static Epic generateEpic(UserStoryRequest request) {
         Epic epic = new Epic();
         epic.epicId = 'EPIC-' + generateRandomId();
-        epic.title = 'Implement ' + request.businessRequirement;
-        epic.description = 'As a business stakeholder, I want to ' + request.businessRequirement.toLowerCase() +
-            ' so that we can improve ' + request.businessProcess + ' efficiency and user experience.';
+        String requirement = String.isNotBlank(request.businessRequirement) ? request.businessRequirement : 'Business Requirement';
+        String process = String.isNotBlank(request.businessProcess) ? request.businessProcess : 'business process';
+        String personaName = String.isNotBlank(request.persona) ? request.persona : 'User';
+
+        epic.title = 'Implement ' + requirement;
+        epic.description = 'As a business stakeholder, I want to ' + requirement.toLowerCase() +
+            ' so that we can improve ' + process + ' efficiency and user experience.';
         epic.businessValue = determineBusinessValue(request);
         epic.targetRelease = 'Q3 2026';
         epic.estimatedEffort = 'Large (3-6 months)';
         epic.strategicAlignment = 'High';
-        epic.affectedPersonas = new List<String>{ request.persona };
+        epic.affectedPersonas = new List<String>{ personaName };
 
         return epic;
     }
