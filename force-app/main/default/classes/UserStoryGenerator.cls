@@ -159,9 +159,10 @@ public with sharing class UserStoryGenerator {
         story.priority = 'High';
         story.storyPoints = 13;
 
+        String firstObject = !request.objects.isEmpty() ? request.objects[0] : 'record';
         story.acceptanceCriteria = new List<String>{
             'GIVEN I have edit permissions',
-            'WHEN I create a new ' + request.objects[0] + ' record',
+            'WHEN I create a new ' + firstObject + ' record',
             'THEN all required fields are validated',
             'AND the record is saved with proper audit trail',
             'AND related records are updated automatically',

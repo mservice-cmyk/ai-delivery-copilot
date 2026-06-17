@@ -7,52 +7,232 @@
 public with sharing class DeliveryCopilotService {
 
     /**
-     * @description Generate user stories based on requirements
-     * @param userRequest Optional user request details
-     * @return DeliveryResponse Strongly-typed response
+     * @description Generate user stories based on requirements using UserStoryGenerator
+     * @param userRequest Optional user request details (comma-separated format: "requirement|persona|process|objects")
+     * @return DeliveryResponse Strongly-typed response converted from UserStoryGenerator output
      */
     public static DeliveryResponse generateUserStories(String userRequest) {
+        try {
+            // Parse user request to extract structured inputs
+            UserStoryGenerator.UserStoryRequest storyRequest = parseUserRequestForStories(userRequest);
+
+            // Call the real UserStoryGenerator
+            UserStoryGenerator.UserStoryResponse storyResponse =
+                UserStoryGenerator.generateUserStories(storyRequest);
+
+            // Convert UserStoryResponse to DeliveryResponse format
+            return convertUserStoryResponseToDeliveryResponse(storyResponse);
+
+        } catch (Exception e) {
+            // Fallback to basic response if parsing fails
+            return generateFallbackUserStoriesResponse(userRequest, e.getMessage());
+        }
+    }
+
+    /**
+     * @description Parse user request string into structured UserStoryRequest
+     * @param userRequest The raw user request string
+     * @return UserStoryRequest Structured request object
+     */
+    private static UserStoryGenerator.UserStoryRequest parseUserRequestForStories(String userRequest) {
+        UserStoryGenerator.UserStoryRequest request = new UserStoryGenerator.UserStoryRequest();
+
+        // Set defaults
+        request.businessRequirement = 'customer portal implementation';
+        request.persona = 'Business User';
+        request.businessProcess = 'business operations';
+        request.objects = new List<String>{'Account', 'Contact'};
+
+        if (String.isNotBlank(userRequest)) {
+            // Try to extract meaningful information from the request
+            String lowerRequest = userRequest.toLowerCase();
+
+            // Extract business requirement (use first sentence or full text)
+            request.businessRequirement = userRequest.length() > 100
+                ? userRequest.substring(0, 100)
+                : userRequest;
+
+            // Detect persona keywords
+            if (lowerRequest.contains('sales')) {
+                request.persona = 'Sales Manager';
+                request.objects = new List<String>{'Account', 'Contact', 'Opportunity', 'Lead'};
+            } else if (lowerRequest.contains('service') || lowerRequest.contains('support')) {
+                request.persona = 'Customer Support Manager';
+                request.objects = new List<String>{'Case', 'Contact', 'Account'};
+            } else if (lowerRequest.contains('marketing')) {
+                request.persona = 'Marketing Manager';
+                request.objects = new List<String>{'Campaign', 'Lead', 'Contact'};
+            } else if (lowerRequest.contains('customer')) {
+                request.persona = 'Customer';
+                request.objects = new List<String>{'Case', 'Contact', 'Knowledge'};
+            }
+
+            // Detect process keywords
+            if (lowerRequest.contains('case') || lowerRequest.contains('support')) {
+                request.businessProcess = 'case management';
+            } else if (lowerRequest.contains('sales') || lowerRequest.contains('opportunity')) {
+                request.businessProcess = 'sales pipeline';
+            } else if (lowerRequest.contains('marketing') || lowerRequest.contains('campaign')) {
+                request.businessProcess = 'marketing operations';
+            } else if (lowerRequest.contains('portal') || lowerRequest.contains('self-service')) {
+                request.businessProcess = 'customer self-service';
+            }
+        }
+
+        return request;
+    }
+
+    /**
+     * @description Convert UserStoryGenerator response to DeliveryResponse format
+     * @param storyResponse The UserStoryGenerator response
+     * @return DeliveryResponse Formatted for UI consumption
+     */
+    private static DeliveryResponse convertUserStoryResponseToDeliveryResponse(
+        UserStoryGenerator.UserStoryResponse storyResponse
+    ) {
+        DeliveryResponse response = new DeliveryResponse();
+        response.actionType = 'Generate User Stories';
+        response.timestamp = storyResponse.timestamp;
+        response.userRequest = storyResponse.request.businessRequirement;
+        response.priority = 'High';
+        response.confidenceScore = storyResponse.confidenceScore;
+
+        // Build executive summary from epic and stories
+        response.executiveSummary = String.format(
+            'Generated {0} comprehensive user stories with {1} total story points. ' +
+            'Epic: "{2}". Stories include acceptance criteria, dependencies, edge cases, ' +
+            'and definition of done. Ready for Jira import.',
+            new List<Object>{
+                storyResponse.totalStories,
+                storyResponse.estimatedStoryPoints,
+                storyResponse.epic.title
+            }
+        );
+
+        // Build recommendations from story priorities and technical notes
+        response.recommendations = new List<String>();
+        response.recommendations.add('Review Epic: ' + storyResponse.epic.title + ' (Target: ' + storyResponse.epic.targetRelease + ')');
+        response.recommendations.add('Start with high-priority stories: Core Functionality and Data Management');
+        response.recommendations.add('Total estimated effort: ' + storyResponse.estimatedStoryPoints + ' story points');
+
+        // Extract unique technical recommendations from stories
+        Set<String> uniqueTechnicalNotes = new Set<String>();
+        for (UserStoryGenerator.UserStory story : storyResponse.userStories) {
+            if (String.isNotBlank(story.technicalNotes) && !uniqueTechnicalNotes.contains(story.technicalNotes)) {
+                uniqueTechnicalNotes.add(story.technicalNotes);
+                if (response.recommendations.size() < 8) {
+                    response.recommendations.add('Technical: ' + story.technicalNotes);
+                }
+            }
+        }
+
+        // Build risks from story dependencies and edge cases
+        response.risks = new List<RiskItem>();
+        response.risks.add(new RiskItem(
+            'Story dependencies must be addressed in correct sequence',
+            'Medium',
+            'High'
+        ));
+        response.risks.add(new RiskItem(
+            'Edge cases identified across ' + storyResponse.totalStories + ' stories require thorough testing',
+            'Medium',
+            'Medium'
+        ));
+
+        // Add sample edge case as risk if available
+        if (!storyResponse.userStories.isEmpty() &&
+            !storyResponse.userStories[0].edgeCases.isEmpty()) {
+            response.risks.add(new RiskItem(
+                'Example edge case: ' + storyResponse.userStories[0].edgeCases[0],
+                'Low',
+                'Medium'
+            ));
+        }
+
+        // Build action items from stories
+        response.actionItems = new List<ActionItem>();
+        response.actionItems.add(new ActionItem(
+            'Review all ' + storyResponse.totalStories + ' user stories with product owner',
+            'High',
+            'Product Owner',
+            '1-2 days'
+        ));
+        response.actionItems.add(new ActionItem(
+            'Validate acceptance criteria for each story',
+            'High',
+            'Business Analyst',
+            '2 days'
+        ));
+        response.actionItems.add(new ActionItem(
+            'Conduct estimation workshop with development team',
+            'Medium',
+            'Scrum Master',
+            '1 day'
+        ));
+
+        // Add story-specific action items
+        Integer actionCount = 3;
+        for (UserStoryGenerator.UserStory story : storyResponse.userStories) {
+            if (actionCount >= 6) break;
+            if (story.priority == 'Critical' || story.priority == 'High') {
+                response.actionItems.add(new ActionItem(
+                    'Begin work on: ' + story.title + ' (' + story.storyPoints + ' pts)',
+                    story.priority,
+                    'Development Team',
+                    story.storyPoints + ' story points'
+                ));
+                actionCount++;
+            }
+        }
+
+        // Build next steps
+        response.nextSteps = new List<String>();
+        response.nextSteps.add('Import stories to Jira or project management tool');
+        response.nextSteps.add('Schedule backlog refinement session with stakeholders');
+        response.nextSteps.add('Prioritize stories based on business value and dependencies');
+        response.nextSteps.add('Begin sprint planning for Sprint 1');
+        response.nextSteps.add('Set up development environment and CI/CD pipeline');
+
+        return response;
+    }
+
+    /**
+     * @description Generate fallback response when UserStoryGenerator fails
+     * @param userRequest The original user request
+     * @param errorMessage The error message
+     * @return DeliveryResponse Basic fallback response
+     */
+    private static DeliveryResponse generateFallbackUserStoriesResponse(String userRequest, String errorMessage) {
         DeliveryResponse response = new DeliveryResponse();
         response.actionType = 'Generate User Stories';
         response.timestamp = DateTime.now();
         response.userRequest = userRequest;
+        response.priority = 'High';
+        response.confidenceScore = 50;
 
-        response.executiveSummary = 'Generated 8 comprehensive user stories for customer portal implementation. '
-            + 'Stories include acceptance criteria, story points, and dependencies. '
-            + 'Estimated delivery: 4 sprints with team of 5 developers.';
+        response.executiveSummary = 'User story generation encountered an issue. ' +
+            'Please provide more specific details about your business requirement, persona, ' +
+            'business process, and relevant Salesforce objects for better results.';
 
         response.recommendations = new List<String>{
-            'Start with authentication and user profile management stories (highest priority)',
-            'Implement case management in parallel with knowledge base',
-            'Use Lightning Web Components for modern, performant UI',
-            'Consider implementing automated testing from sprint 1',
-            'Plan for accessibility (WCAG 2.1 AA) from the beginning'
+            'Provide a clear business requirement (e.g., "customer self-service portal")',
+            'Specify the user persona (e.g., "Sales Manager", "Customer Support Agent")',
+            'Name the business process (e.g., "case management", "sales pipeline")',
+            'List relevant Salesforce objects (e.g., "Account, Contact, Opportunity")'
         };
 
         response.risks = new List<RiskItem>{
-            new RiskItem('Integration with legacy systems may require custom middleware', 'High', 'Medium'),
-            new RiskItem('User adoption depends on training and change management', 'Medium', 'High'),
-            new RiskItem('Data migration complexity not fully assessed', 'Medium', 'Medium'),
-            new RiskItem('Third-party API rate limits may impact functionality', 'Low', 'High')
+            new RiskItem('Insufficient input details may result in generic stories', 'Medium', 'High'),
+            new RiskItem('Error occurred: ' + errorMessage, 'Low', 'Low')
         };
 
         response.actionItems = new List<ActionItem>{
-            new ActionItem('Review and refine user stories with product owner', 'High', 'Product Owner', '2 days'),
-            new ActionItem('Set up development environments and CI/CD pipeline', 'High', 'Tech Lead', '3 days'),
-            new ActionItem('Create technical design document for architecture', 'High', 'Solution Architect', '5 days'),
-            new ActionItem('Conduct estimation workshop with development team', 'Medium', 'Scrum Master', '1 day'),
-            new ActionItem('Define acceptance criteria with business stakeholders', 'Medium', 'Business Analyst', '3 days')
+            new ActionItem('Refine user story request with more details', 'High', 'Business Analyst', '30 minutes')
         };
 
-        response.priority = 'High';
-        response.confidenceScore = 85;
-
         response.nextSteps = new List<String>{
-            'Schedule backlog refinement session with stakeholders',
-            'Begin sprint planning for initial development phase',
-            'Identify and procure any required third-party licenses',
-            'Set up monitoring and alerting infrastructure',
-            'Create communication plan for regular status updates'
+            'Review the example format for user story requests',
+            'Retry with more specific business context'
         };
 
         return response;

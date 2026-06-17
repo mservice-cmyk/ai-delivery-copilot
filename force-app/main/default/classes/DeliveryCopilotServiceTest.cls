@@ -33,7 +33,9 @@ private class DeliveryCopilotServiceTest {
 
         Assert.isNotNull(response, 'Response should not be null');
         Assert.areEqual('Generate User Stories', response.actionType, 'Action type should match');
-        Assert.isNull(response.userRequest, 'User request should be null');
+        // With UserStoryGenerator integration, even null input gets default values
+        Assert.isNotNull(response.userRequest, 'User request should have default value');
+        Assert.isTrue(response.executiveSummary.contains('story'), 'Should mention stories');
     }
 
     @isTest
