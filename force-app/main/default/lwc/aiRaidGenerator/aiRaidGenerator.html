@@ -1,0 +1,262 @@
+<template>
+    <div class="raid-container">
+        <!-- Modern Header -->
+        <div class="raid-header">
+            <div class="header-content">
+                <div class="header-title-section">
+                    <lightning-icon icon-name="utility:warning" size="large" class="header-icon"></lightning-icon>
+                    <div class="header-text">
+                        <h1 class="slds-text-heading_large slds-text-color_inverse">RAID Log Generator</h1>
+                        <p class="slds-text-body_small slds-text-color_inverse-weak">
+                            Generate comprehensive Risks, Assumptions, Issues, and Dependencies tracking
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="raid-main-content">
+            <div class="content-wrapper">
+
+                <!-- Input Section -->
+                <div class="input-section slds-m-bottom_x-large">
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Input Sources</h2>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_medium">
+                        Provide at least one input source. The AI will analyze the content to identify risks, assumptions, issues, and dependencies.
+                    </p>
+
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <!-- Meeting Notes -->
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-card title="Meeting Notes" icon-name="utility:date_input">
+                                <div class="slds-p-around_medium">
+                                    <lightning-textarea
+                                        value={meetingNotes}
+                                        onchange={handleMeetingNotesChange}
+                                        placeholder="Paste meeting notes, action items, or discussion points from stakeholder meetings, team syncs, or planning sessions..."
+                                        rows="4">
+                                    </lightning-textarea>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                        <!-- Status Update -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                            <lightning-card title="Status Update" icon-name="utility:metrics">
+                                <div class="slds-p-around_medium">
+                                    <lightning-textarea
+                                        value={statusUpdate}
+                                        onchange={handleStatusUpdateChange}
+                                        placeholder="Paste project status updates, progress reports, sprint summaries, or milestone reviews..."
+                                        rows="4">
+                                    </lightning-textarea>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                        <!-- Email Content -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                            <lightning-card title="Email Content" icon-name="utility:email">
+                                <div class="slds-p-around_medium">
+                                    <lightning-textarea
+                                        value={emailContent}
+                                        onchange={handleEmailContentChange}
+                                        placeholder="Paste email threads, stakeholder communications, escalations, or important correspondence..."
+                                        rows="4">
+                                    </lightning-textarea>
+                                </div>
+                            </lightning-card>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <div class="slds-m-top_large slds-text-align_center">
+                        <lightning-button
+                            label="Generate RAID Log"
+                            variant="brand"
+                            onclick={handleGenerate}
+                            disabled={isGenerateDisabled}
+                            icon-name="utility:lightning_inspector"
+                            class="generate-button">
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <template if:true={showResults}>
+                    <div class="results-section">
+                        <div class="results-header slds-m-bottom_medium">
+                            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                <div>
+                                    <h2 class="slds-text-heading_medium">RAID Analysis Results</h2>
+                                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                        {raidResults.summary}
+                                    </p>
+                                </div>
+                                <div>
+                                    <lightning-button
+                                        label="Clear Results"
+                                        variant="neutral"
+                                        onclick={handleClearResults}
+                                        icon-name="utility:clear">
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Metrics -->
+                        <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_large">
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="metric-card metric-risk">
+                                    <div class="metric-icon">
+                                        <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="metric-content">
+                                        <div class="metric-value">{riskCount}</div>
+                                        <div class="metric-label">Risks</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="metric-card metric-assumption">
+                                    <div class="metric-icon">
+                                        <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="metric-content">
+                                        <div class="metric-value">{assumptionCount}</div>
+                                        <div class="metric-label">Assumptions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="metric-card metric-issue">
+                                    <div class="metric-icon">
+                                        <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="metric-content">
+                                        <div class="metric-value">{issueCount}</div>
+                                        <div class="metric-label">Issues</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="metric-card metric-dependency">
+                                    <div class="metric-icon">
+                                        <lightning-icon icon-name="utility:link" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="metric-content">
+                                        <div class="metric-value">{dependencyCount}</div>
+                                        <div class="metric-label">Dependencies</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risks Table -->
+                        <div class="slds-m-bottom_large">
+                            <lightning-card title="Risks" icon-name="utility:error">
+                                <div class="slds-p-around_medium">
+                                    <template if:true={riskCount}>
+                                        <lightning-datatable
+                                            key-field="id"
+                                            data={raidResults.risks}
+                                            columns={riskColumns}
+                                            hide-checkbox-column>
+                                        </lightning-datatable>
+                                    </template>
+                                    <template if:false={riskCount}>
+                                        <div class="slds-text-align_center slds-p-vertical_large">
+                                            <p class="slds-text-color_weak">No risks identified</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                        <!-- Assumptions Table -->
+                        <div class="slds-m-bottom_large">
+                            <lightning-card title="Assumptions" icon-name="utility:info">
+                                <div class="slds-p-around_medium">
+                                    <template if:true={assumptionCount}>
+                                        <lightning-datatable
+                                            key-field="id"
+                                            data={raidResults.assumptions}
+                                            columns={assumptionColumns}
+                                            hide-checkbox-column>
+                                        </lightning-datatable>
+                                    </template>
+                                    <template if:false={assumptionCount}>
+                                        <div class="slds-text-align_center slds-p-vertical_large">
+                                            <p class="slds-text-color_weak">No assumptions identified</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                        <!-- Issues Table -->
+                        <div class="slds-m-bottom_large">
+                            <lightning-card title="Issues" icon-name="utility:warning">
+                                <div class="slds-p-around_medium">
+                                    <template if:true={issueCount}>
+                                        <lightning-datatable
+                                            key-field="id"
+                                            data={raidResults.issues}
+                                            columns={issueColumns}
+                                            hide-checkbox-column>
+                                        </lightning-datatable>
+                                    </template>
+                                    <template if:false={issueCount}>
+                                        <div class="slds-text-align_center slds-p-vertical_large">
+                                            <p class="slds-text-color_weak">No issues identified</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                        <!-- Dependencies Table -->
+                        <div class="slds-m-bottom_large">
+                            <lightning-card title="Dependencies" icon-name="utility:link">
+                                <div class="slds-p-around_medium">
+                                    <template if:true={dependencyCount}>
+                                        <lightning-datatable
+                                            key-field="id"
+                                            data={raidResults.dependencies}
+                                            columns={dependencyColumns}
+                                            hide-checkbox-column>
+                                        </lightning-datatable>
+                                    </template>
+                                    <template if:false={dependencyCount}>
+                                        <div class="slds-text-align_center slds-p-vertical_large">
+                                            <p class="slds-text-color_weak">No dependencies identified</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-card>
+                        </div>
+
+                    </div>
+                </template>
+
+            </div>
+        </div>
+
+        <!-- Global Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="global-loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Analyzing and generating RAID log..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-text-color_inverse slds-m-top_medium">
+                        Analyzing content and generating RAID log...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

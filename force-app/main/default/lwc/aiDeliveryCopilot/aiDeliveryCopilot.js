@@ -60,7 +60,8 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             description: 'Create Risks, Assumptions, Issues, and Dependencies tracking log',
             icon: 'utility:warning',
             iconColor: 'slds-icon-text-warning',
-            context: 'raid_log'
+            context: 'raid_log',
+            isNavigate: true
         },
         {
             id: 'meeting-prep',
@@ -100,6 +101,8 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
                 this.navigateToUATGenerator();
             } else if (actionId === 'executive-status') {
                 this.navigateToExecutiveStatusGenerator();
+            } else if (actionId === 'raid-log') {
+                this.navigateToRAIDGenerator();
             }
             return;
         }
@@ -138,6 +141,15 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             type: 'standard__component',
             attributes: {
                 componentName: 'c__aiExecutiveStatusGenerator'
+            }
+        });
+    }
+
+    navigateToRAIDGenerator() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__component',
+            attributes: {
+                componentName: 'c__aiRaidGenerator'
             }
         });
     }

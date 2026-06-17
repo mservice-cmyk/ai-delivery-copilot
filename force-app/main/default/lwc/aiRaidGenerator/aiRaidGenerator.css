@@ -1,0 +1,237 @@
+/* Container */
+.raid-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Header Styling */
+.raid-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-icon {
+    --slds-c-icon-color-background: rgba(255, 255, 255, 0.2);
+    --slds-c-icon-color-foreground: #ffffff;
+}
+
+.header-text h1 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Main Content */
+.raid-main-content {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 150px);
+}
+
+.content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Input Section */
+.input-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Generate Button */
+.generate-button {
+    min-width: 200px;
+    height: 48px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Results Section */
+.results-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.results-header {
+    border-bottom: 2px solid #ecebea;
+    padding-bottom: 1rem;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    border-left: 4px solid;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.metric-risk {
+    border-left-color: #ea001e;
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+}
+
+.metric-assumption {
+    border-left-color: #0176d3;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+
+.metric-issue {
+    border-left-color: #ffb75d;
+    background: linear-gradient(135deg, #ffffff 0%, #fff8f0 100%);
+}
+
+.metric-dependency {
+    border-left-color: #9050e9;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f5ff 100%);
+}
+
+.metric-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-risk .metric-icon {
+    background: rgba(234, 0, 30, 0.1);
+}
+
+.metric-risk .metric-icon lightning-icon {
+    --slds-c-icon-color-foreground: #ea001e;
+}
+
+.metric-assumption .metric-icon {
+    background: rgba(1, 118, 211, 0.1);
+}
+
+.metric-assumption .metric-icon lightning-icon {
+    --slds-c-icon-color-foreground: #0176d3;
+}
+
+.metric-issue .metric-icon {
+    background: rgba(255, 183, 93, 0.1);
+}
+
+.metric-issue .metric-icon lightning-icon {
+    --slds-c-icon-color-foreground: #ffb75d;
+}
+
+.metric-dependency .metric-icon {
+    background: rgba(144, 80, 233, 0.1);
+}
+
+.metric-dependency .metric-icon lightning-icon {
+    --slds-c-icon-color-foreground: #9050e9;
+}
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Loading Overlay */
+.global-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .raid-header {
+        padding: 1.5rem 1rem;
+    }
+
+    .header-title-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .raid-main-content {
+        padding: 1rem;
+    }
+
+    .input-section,
+    .results-section {
+        padding: 1rem;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Card Customization */
+lightning-card {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Datatable Styling */
+lightning-datatable {
+    border-radius: 4px;
+}
