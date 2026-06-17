@@ -1,0 +1,257 @@
+<template>
+    <div class="executive-container">
+        <!-- Header -->
+        <div class="executive-header">
+            <lightning-icon icon-name="utility:graph" size="medium" class="header-icon"></lightning-icon>
+            <div class="header-text">
+                <h1 class="slds-text-heading_large">Executive Status Generator</h1>
+                <p class="slds-text-body_small slds-text-color_weak">Generate executive-level status reports with AI-powered analysis</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+            <!-- Input Card -->
+            <div class="slds-col slds-size_1-of-1">
+                <lightning-card title="Status Report Inputs" icon-name="utility:info">
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- Project Notes -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Project Notes"
+                                    value={projectNotes}
+                                    onchange={handleProjectNotesChange}
+                                    placeholder="Enter key project updates, progress, and current state..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Meeting Takeaways -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Meeting Takeaways"
+                                    value={meetingTakeaways}
+                                    onchange={handleMeetingTakeawaysChange}
+                                    placeholder="Summarize key decisions and action items from recent meetings..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Risks / Blockers -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Risks / Blockers"
+                                    value={risksBlockers}
+                                    onchange={handleRisksBlockersChange}
+                                    placeholder="List any current risks, issues, or blockers..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Upcoming Milestones -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Upcoming Milestones"
+                                    value={upcomingMilestones}
+                                    onchange={handleUpcomingMilestonesChange}
+                                    placeholder="Enter upcoming milestones and target dates..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Audience -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Audience"
+                                    value={audience}
+                                    onchange={handleAudienceChange}
+                                    placeholder="e.g., C-Suite, Steering Committee, Project Sponsors..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="slds-m-top_medium slds-text-align_center">
+                            <lightning-button
+                                label="Generate Executive Status"
+                                variant="brand"
+                                onclick={handleGenerate}
+                                disabled={isGenerateDisabled}
+                                class="generate-button">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-card>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <template if:true={showResults}>
+            <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+                <!-- Executive Summary Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Executive Summary" icon-name="utility:description">
+                        <div slot="actions">
+                            <lightning-button
+                                label="Clear Results"
+                                onclick={handleClearResults}
+                                variant="neutral">
+                            </lightning-button>
+                        </div>
+                        <div class="slds-p-around_medium">
+                            <p class="summary-text">{statusResults.executiveSummary}</p>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Project Health Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Project Health" icon-name="utility:activity">
+                        <div class="slds-p-around_medium">
+                            <div class="health-indicator">
+                                <span class="health-label">Overall Status:</span>
+                                <lightning-badge label={statusResults.projectHealth} class={healthBadgeClass}></lightning-badge>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Key Accomplishments Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Key Accomplishments" icon-name="utility:success">
+                        <div class="slds-p-around_medium">
+                            <ul class="accomplishments-list">
+                                <template for:each={statusResults.keyAccomplishments} for:item="accomplishment">
+                                    <li key={accomplishment.id} class="accomplishment-item">
+                                        <lightning-icon icon-name="utility:check" size="x-small" class="accomplishment-icon"></lightning-icon>
+                                        {accomplishment.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Key Decisions Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Key Decisions" icon-name="utility:filter">
+                        <div class="slds-p-around_medium">
+                            <ul class="decisions-list">
+                                <template for:each={statusResults.keyDecisions} for:item="decision">
+                                    <li key={decision.id} class="decision-item">
+                                        {decision.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Risks and Blockers Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Risks and Blockers" icon-name="utility:warning">
+                        <div class="slds-p-around_medium">
+                            <template for:each={statusResults.risksAndBlockers} for:item="risk">
+                                <div key={risk.id} class="risk-item">
+                                    <div class="risk-header">
+                                        <span class="risk-title">{risk.title}</span>
+                                        <lightning-badge label={risk.severity} class={risk.severityClass}></lightning-badge>
+                                    </div>
+                                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                                        {risk.description}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Executive Asks Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Executive Asks" icon-name="utility:call">
+                        <div class="slds-p-around_medium">
+                            <ul class="asks-list">
+                                <template for:each={statusResults.executiveAsks} for:item="ask">
+                                    <li key={ask.id} class="ask-item">
+                                        {ask.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Recommended Next Actions Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Recommended Next Actions" icon-name="utility:forward">
+                        <div class="slds-p-around_medium">
+                            <ul class="actions-list">
+                                <template for:each={statusResults.recommendedNextActions} for:item="action">
+                                    <li key={action.id} class="action-item">
+                                        {action.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Owners Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Owners" icon-name="utility:user">
+                        <div class="slds-p-around_medium">
+                            <template for:each={statusResults.owners} for:item="owner">
+                                <div key={owner.id} class="owner-item">
+                                    <div class="owner-header">
+                                        <span class="owner-name">{owner.name}</span>
+                                    </div>
+                                    <p class="slds-text-body_small slds-text-color_weak">
+                                        {owner.responsibility}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Next Milestone Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Next Milestone" icon-name="utility:signpost">
+                        <div class="slds-p-around_medium">
+                            <div class="milestone-content">
+                                <h3 class="milestone-title">{statusResults.nextMilestone.title}</h3>
+                                <p class="milestone-date">Target Date: {statusResults.nextMilestone.targetDate}</p>
+                                <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
+                                    {statusResults.nextMilestone.description}
+                                </p>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Generating executive status..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-m-top_medium">
+                        Generating executive status...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

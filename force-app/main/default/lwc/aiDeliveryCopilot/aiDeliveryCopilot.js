@@ -51,7 +51,8 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             description: 'Generate executive-level status reports with key metrics and insights',
             icon: 'utility:graph',
             iconColor: 'slds-icon-text-error',
-            context: 'executive_status'
+            context: 'executive_status',
+            isNavigate: true
         },
         {
             id: 'raid-log',
@@ -95,7 +96,11 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
 
         // Check if this action should navigate to a separate component
         if (action.isNavigate) {
-            this.navigateToUATGenerator();
+            if (actionId === 'uat-test-generator') {
+                this.navigateToUATGenerator();
+            } else if (actionId === 'executive-status') {
+                this.navigateToExecutiveStatusGenerator();
+            }
             return;
         }
 
@@ -124,6 +129,15 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             type: 'standard__component',
             attributes: {
                 componentName: 'c__aiUatTestGenerator'
+            }
+        });
+    }
+
+    navigateToExecutiveStatusGenerator() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__component',
+            attributes: {
+                componentName: 'c__aiExecutiveStatusGenerator'
             }
         });
     }

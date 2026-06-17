@@ -14,6 +14,7 @@
     <navType>Standard</navType>
     <tabs>AI_Delivery_Copilot</tabs>
     <tabs>UAT_Test_Generator</tabs>
+    <tabs>Executive_Status_Generator</tabs>
     <tabs>standard-home</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

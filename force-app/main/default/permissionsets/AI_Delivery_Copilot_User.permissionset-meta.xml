@@ -19,4 +19,12 @@
         <tab>AI_Delivery_Copilot</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>UAT_Test_Generator</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Executive_Status_Generator</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
