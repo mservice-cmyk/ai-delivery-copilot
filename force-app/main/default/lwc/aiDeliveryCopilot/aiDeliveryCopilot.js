@@ -1,8 +1,9 @@
 import { LightningElement, track } from 'lwc';
 import getAIInsights from '@salesforce/apex/AIDeliveryCopilotController.getAIInsights';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { NavigationMixin } from 'lightning/navigation';
 
-export default class AiDeliveryCopilot extends LightningElement {
+export default class AiDeliveryCopilot extends NavigationMixin(LightningElement) {
     @track searchQuery = '';
     @track userRequest = '';
     @track isLoading = false;
@@ -26,6 +27,15 @@ export default class AiDeliveryCopilot extends LightningElement {
             icon: 'utility:check',
             iconColor: 'slds-icon-text-warning',
             context: 'test_cases'
+        },
+        {
+            id: 'uat-test-generator',
+            title: 'UAT Test Generator',
+            description: 'Generate comprehensive UAT test scenarios with persona coverage and test data',
+            icon: 'utility:check',
+            iconColor: 'slds-icon-text-success',
+            context: 'uat_tests',
+            isNavigate: true
         },
         {
             id: 'solution-design',
@@ -83,6 +93,12 @@ export default class AiDeliveryCopilot extends LightningElement {
 
         if (!action) return;
 
+        // Check if this action should navigate to a separate component
+        if (action.isNavigate) {
+            this.navigateToUATGenerator();
+            return;
+        }
+
         this.activeCard = actionId;
         this.isLoading = true;
         this.showResults = false;
@@ -101,6 +117,15 @@ export default class AiDeliveryCopilot extends LightningElement {
                 this.isLoading = false;
                 this.activeCard = null;
             });
+    }
+
+    navigateToUATGenerator() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__component',
+            attributes: {
+                componentName: 'c__aiUatTestGenerator'
+            }
+        });
     }
 
     handleClearResults() {

@@ -1,0 +1,265 @@
+<template>
+    <div class="uat-container">
+        <!-- Header -->
+        <div class="uat-header">
+            <lightning-icon icon-name="utility:check" size="medium" class="header-icon"></lightning-icon>
+            <div class="header-text">
+                <h1 class="slds-text-heading_large">UAT Test Generator</h1>
+                <p class="slds-text-body_small slds-text-color_weak">Generate comprehensive UAT test scenarios with AI-powered analysis</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+            <!-- User Story Input -->
+            <div class="slds-col slds-size_1-of-1">
+                <lightning-card title="Test Requirements" icon-name="utility:info">
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- User Story -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="User Story"
+                                    value={userStory}
+                                    onchange={handleUserStoryChange}
+                                    placeholder="As a [user], I want [feature] so that [benefit]..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Acceptance Criteria -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Acceptance Criteria"
+                                    value={acceptanceCriteria}
+                                    onchange={handleAcceptanceCriteriaChange}
+                                    placeholder="Given [context], When [action], Then [outcome]..."
+                                    required
+                                    rows="3">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- Persona -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Persona"
+                                    value={persona}
+                                    onchange={handlePersonaChange}
+                                    placeholder="e.g., Sales Manager, System Administrator"
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Business Process -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Business Process"
+                                    value={businessProcess}
+                                    onchange={handleBusinessProcessChange}
+                                    placeholder="e.g., Lead to Cash, Case Management"
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Salesforce Objects -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Salesforce Objects"
+                                    value={salesforceObjects}
+                                    onchange={handleSalesforceObjectsChange}
+                                    placeholder="e.g., Account, Contact, Opportunity, Custom__c"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="slds-m-top_medium slds-text-align_center">
+                            <lightning-button
+                                label="Generate UAT Tests"
+                                variant="brand"
+                                onclick={handleGenerate}
+                                disabled={isGenerateDisabled}
+                                class="generate-button">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-card>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <template if:true={showResults}>
+            <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+                <!-- Test Overview Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Test Overview" icon-name="utility:summary">
+                        <div slot="actions">
+                            <lightning-button
+                                label="Clear Results"
+                                onclick={handleClearResults}
+                                variant="neutral">
+                            </lightning-button>
+                        </div>
+                        <div class="slds-p-around_medium">
+                            <div class="overview-grid">
+                                <div class="overview-item">
+                                    <span class="overview-label">Priority:</span>
+                                    <lightning-badge label={testResults.priority} class="priority-badge"></lightning-badge>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Readiness Score:</span>
+                                    <span class="overview-value">{testResults.readinessScore}%</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Test Scenarios:</span>
+                                    <span class="overview-value">{testScenarioCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Test Scenarios Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Test Scenarios" icon-name="utility:trail">
+                        <div class="slds-p-around_medium">
+                            <template for:each={testResults.testScenarios} for:item="scenario" for:index="index">
+                                <div key={scenario.id} class="scenario-item">
+                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+                                        {scenario.title}
+                                    </h3>
+                                    <p class="slds-text-body_small slds-text-color_weak">
+                                        {scenario.description}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Test Steps Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Test Steps" icon-name="utility:steps">
+                        <div class="slds-p-around_medium">
+                            <ol class="test-steps-list">
+                                <template for:each={testResults.testSteps} for:item="step">
+                                    <li key={step.id} class="test-step-item">
+                                        {step.description}
+                                    </li>
+                                </template>
+                            </ol>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Expected Results Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Expected Results" icon-name="utility:success">
+                        <div class="slds-p-around_medium">
+                            <ul class="expected-results-list">
+                                <template for:each={testResults.expectedResults} for:item="result">
+                                    <li key={result.id} class="expected-result-item">
+                                        <lightning-icon icon-name="utility:check" size="x-small" class="result-icon"></lightning-icon>
+                                        {result.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Negative Tests Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Negative Tests" icon-name="utility:warning">
+                        <div class="slds-p-around_medium">
+                            <ul class="negative-tests-list">
+                                <template for:each={testResults.negativeTests} for:item="test">
+                                    <li key={test.id} class="negative-test-item">
+                                        {test.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Boundary Tests Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Boundary Tests" icon-name="utility:target">
+                        <div class="slds-p-around_medium">
+                            <ul class="boundary-tests-list">
+                                <template for:each={testResults.boundaryTests} for:item="test">
+                                    <li key={test.id} class="boundary-test-item">
+                                        {test.description}
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Persona Coverage Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Persona Coverage" icon-name="utility:user">
+                        <div class="slds-p-around_medium">
+                            <template for:each={testResults.personaCoverage} for:item="coverage">
+                                <div key={coverage.id} class="persona-coverage-item">
+                                    <div class="persona-header">
+                                        <span class="persona-name">{coverage.persona}</span>
+                                        <lightning-badge label={coverage.coverage} class="coverage-badge"></lightning-badge>
+                                    </div>
+                                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                                        {coverage.notes}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Test Data Needed Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Test Data Needed" icon-name="utility:database">
+                        <div class="slds-p-around_medium">
+                            <template for:each={testResults.testDataNeeded} for:item="data">
+                                <div key={data.id} class="test-data-item">
+                                    <div class="data-header">
+                                        <span class="data-object">{data.object}</span>
+                                        <span class="data-count slds-text-body_small slds-text-color_weak">
+                                            {data.recordCount} records
+                                        </span>
+                                    </div>
+                                    <ul class="data-fields-list slds-m-top_x-small">
+                                        <template for:each={data.fields} for:item="field">
+                                            <li key={field} class="data-field-item">
+                                                {field}
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Generating UAT tests..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-m-top_medium">
+                        Generating UAT tests...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
