@@ -1,0 +1,156 @@
+<template>
+    <div class="copilot-container">
+        <!-- Modern Header -->
+        <div class="copilot-header">
+            <div class="header-content">
+                <div class="header-title-section">
+                    <lightning-icon icon-name="custom:custom14" size="large" class="header-icon"></lightning-icon>
+                    <div class="header-text">
+                        <h1 class="slds-text-heading_large slds-text-color_inverse">AI Delivery Copilot</h1>
+                        <p class="slds-text-body_small slds-text-color_inverse-weak">Accelerate your Salesforce delivery with AI-powered assistance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="copilot-main-content">
+            <div class="content-wrapper">
+
+                <!-- Search Box -->
+                <div class="search-section slds-m-bottom_large">
+                    <lightning-input
+                        type="search"
+                        label="Search Quick Actions"
+                        value={searchQuery}
+                        onchange={handleSearchChange}
+                        placeholder="Search for actions..."
+                        variant="label-hidden"
+                        class="search-input">
+                    </lightning-input>
+                </div>
+
+                <!-- Large Text Area -->
+                <div class="request-section slds-m-bottom_x-large">
+                    <label class="slds-form-element__label request-label">
+                        What would you like help with today?
+                    </label>
+                    <lightning-textarea
+                        value={userRequest}
+                        onchange={handleRequestChange}
+                        placeholder={requestPlaceholder}
+                        rows="4"
+                        class="request-textarea">
+                    </lightning-textarea>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                        Describe your request in detail for better results. Select a quick action below to get started.
+                    </p>
+                </div>
+
+                <!-- Results Section -->
+                <template if:true={showResults}>
+                    <div class="results-section slds-m-bottom_x-large">
+                        <lightning-card title="Generated Content" icon-name="utility:success">
+                            <div slot="actions">
+                                <lightning-button
+                                    label="Clear"
+                                    onclick={handleClearResults}
+                                    variant="neutral">
+                                </lightning-button>
+                            </div>
+                            <div class="slds-p-around_medium">
+                                <div class="generated-content">
+                                    {generatedContent}
+                                </div>
+                            </div>
+                        </lightning-card>
+                    </div>
+                </template>
+
+                <!-- Quick Action Cards Grid -->
+                <div class="quick-actions-section">
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Quick Actions</h2>
+
+                    <template if:true={hasFilteredActions}>
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <template for:each={filteredActions} for:item="action">
+                                <div key={action.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                    <article class="action-card">
+                                        <div class="action-card-header">
+                                            <div class="action-icon-wrapper">
+                                                <lightning-icon
+                                                    icon-name={action.icon}
+                                                    size="medium"
+                                                    class={action.iconColor}>
+                                                </lightning-icon>
+                                            </div>
+                                            <h3 class="slds-text-heading_small action-title">{action.title}</h3>
+                                        </div>
+
+                                        <div class="action-card-body">
+                                            <p class="slds-text-body_small slds-text-color_weak action-description">
+                                                {action.description}
+                                            </p>
+                                        </div>
+
+                                        <div class="action-card-footer">
+                                            <lightning-button
+                                                label="Generate"
+                                                variant="brand"
+                                                onclick={handleGenerate}
+                                                data-id={action.id}
+                                                disabled={isLoading}
+                                                class="generate-button">
+                                            </lightning-button>
+                                        </div>
+
+                                        <!-- Loading Overlay -->
+                                        <template if:true={action.isLoading}>
+                                            <div class="card-loading-overlay">
+                                                <lightning-spinner
+                                                    alternative-text="Generating..."
+                                                    size="small"
+                                                    variant="brand">
+                                                </lightning-spinner>
+                                            </div>
+                                        </template>
+                                    </article>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- No Results -->
+                    <template if:false={hasFilteredActions}>
+                        <div class="slds-text-align_center slds-p-vertical_xx-large">
+                            <lightning-icon icon-name="utility:search" size="large" class="slds-icon-text-light"></lightning-icon>
+                            <p class="slds-text-heading_small slds-text-color_weak slds-m-top_medium">
+                                No quick actions found
+                            </p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Try adjusting your search terms
+                            </p>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Global Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="global-loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Processing your request..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-text-color_inverse slds-m-top_medium">
+                        Processing your request...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
