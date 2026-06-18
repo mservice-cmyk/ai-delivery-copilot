@@ -296,6 +296,17 @@ public with sharing class DeliveryCopilotService {
      * @return DeliveryResponse Strongly-typed response
      */
     public static DeliveryResponse reviewSolutionDesign(String userRequest) {
+        // Check if AI integration is available
+        if (AIService.getMode() == AIService.AIMode.REAL) {
+            try {
+                return reviewSolutionDesignWithAI(userRequest);
+            } catch (Exception e) {
+                System.debug('AI integration failed, falling back to mock: ' + e.getMessage());
+                // Fall through to mock response
+            }
+        }
+
+        // Default mock response (fallback or when in mock mode)
         DeliveryResponse response = new DeliveryResponse();
         response.actionType = 'Review Solution Design';
         response.timestamp = DateTime.now();
@@ -340,6 +351,121 @@ public with sharing class DeliveryCopilotService {
         };
 
         return response;
+    }
+
+    /**
+     * @description Review solution design using real AI integration
+     * @param userRequest User's solution design details
+     * @return DeliveryResponse AI-generated response
+     */
+    private static DeliveryResponse reviewSolutionDesignWithAI(String userRequest) {
+        // Get the prompt template
+        PromptTemplateService.PromptTemplate template =
+            PromptTemplateService.getSolutionDesignPrompt(userRequest);
+
+        // Call AI service
+        AIService.AIResponse aiResponse = AIService.callAI(
+            template.userPrompt,
+            template.systemContext,
+            template.maxTokens
+        );
+
+        // Parse AI response and convert to DeliveryResponse
+        if (aiResponse.success && String.isNotBlank(aiResponse.content)) {
+            return parseAISolutionDesignResponse(aiResponse.content, userRequest);
+        } else {
+            throw new CalloutException('AI service call failed: ' + aiResponse.error);
+        }
+    }
+
+    /**
+     * @description Parse AI response JSON into DeliveryResponse format
+     * @param aiContent The AI-generated content (expected as JSON)
+     * @param userRequest Original user request
+     * @return DeliveryResponse Structured response
+     */
+    private static DeliveryResponse parseAISolutionDesignResponse(String aiContent, String userRequest) {
+        try {
+            // Try to parse as JSON
+            Map<String, Object> jsonData = (Map<String, Object>) JSON.deserializeUntyped(aiContent);
+
+            DeliveryResponse response = new DeliveryResponse();
+            response.actionType = 'Review Solution Design';
+            response.timestamp = DateTime.now();
+            response.userRequest = userRequest;
+
+            // Extract fields from AI JSON response
+            response.executiveSummary = (String) jsonData.get('executiveSummary');
+            response.confidenceScore = jsonData.containsKey('confidenceScore')
+                ? (Integer) jsonData.get('confidenceScore')
+                : 85;
+
+            // Parse recommendations
+            if (jsonData.containsKey('recommendations')) {
+                List<Object> recs = (List<Object>) jsonData.get('recommendations');
+                response.recommendations = new List<String>();
+                for (Object rec : recs) {
+                    response.recommendations.add((String) rec);
+                }
+            }
+
+            // Parse risks
+            if (jsonData.containsKey('risks')) {
+                List<Object> risks = (List<Object>) jsonData.get('risks');
+                response.risks = new List<RiskItem>();
+                for (Object riskObj : risks) {
+                    Map<String, Object> risk = (Map<String, Object>) riskObj;
+                    response.risks.add(new RiskItem(
+                        (String) risk.get('description'),
+                        (String) risk.get('impact'),
+                        (String) risk.get('probability')
+                    ));
+                }
+            }
+
+            // Parse action items
+            if (jsonData.containsKey('actionItems')) {
+                List<Object> actions = (List<Object>) jsonData.get('actionItems');
+                response.actionItems = new List<ActionItem>();
+                for (Object actionObj : actions) {
+                    Map<String, Object> action = (Map<String, Object>) actionObj;
+                    response.actionItems.add(new ActionItem(
+                        (String) action.get('task'),
+                        (String) action.get('priority'),
+                        (String) action.get('owner'),
+                        (String) action.get('duration')
+                    ));
+                }
+            }
+
+            // Parse next steps
+            if (jsonData.containsKey('nextSteps')) {
+                List<Object> steps = (List<Object>) jsonData.get('nextSteps');
+                response.nextSteps = new List<String>();
+                for (Object step : steps) {
+                    response.nextSteps.add((String) step);
+                }
+            }
+
+            // Set priority based on risk assessment
+            response.priority = response.risks.size() > 0 ? 'High' : 'Medium';
+
+            return response;
+
+        } catch (Exception e) {
+            // If JSON parsing fails, create a basic response with the AI content
+            System.debug('Failed to parse AI JSON response: ' + e.getMessage());
+            DeliveryResponse response = new DeliveryResponse();
+            response.actionType = 'Review Solution Design';
+            response.timestamp = DateTime.now();
+            response.userRequest = userRequest;
+            response.executiveSummary = aiContent.left(500);
+            response.priority = 'Medium';
+            response.confidenceScore = 70;
+            response.recommendations = new List<String>{'Review AI response manually for detailed recommendations'};
+            response.nextSteps = new List<String>{'Parse and structure the AI recommendations'};
+            return response;
+        }
     }
 
     /**
