@@ -99,12 +99,17 @@
                 <div class="slds-col slds-size_1-of-1">
                     <lightning-card title="Executive Summary" icon-name="utility:description">
                         <div slot="actions">
+                            <lightning-button-menu alternative-text="Export" icon-name="utility:download" menu-alignment="right" variant="border-filled">
+                                <lightning-menu-item label="Copy to Clipboard" icon-name="utility:copy" onclick={handleCopyToClipboard}></lightning-menu-item>
+                                <lightning-menu-item label="Download as Markdown" icon-name="utility:text" onclick={handleDownloadMarkdown}></lightning-menu-item>
+                                <lightning-menu-item label="Download as CSV" icon-name="utility:table" onclick={handleDownloadCSV}></lightning-menu-item>
+                            </lightning-button-menu>
                             <lightning-button
                                 label="Save"
                                 onclick={handleSaveResults}
                                 variant="success"
                                 disabled={isSaving}
-                                class="slds-m-right_x-small">
+                                class="slds-m-left_x-small slds-m-right_x-small">
                             </lightning-button>
                             <lightning-button
                                 label="Clear Results"

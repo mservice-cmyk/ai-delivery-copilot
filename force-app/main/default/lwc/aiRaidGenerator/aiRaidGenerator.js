@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
+import { copyToClipboard, downloadFile, convertToMarkdown, convertToCSV, generateFilename } from 'c/exportUtility';
 
 export default class AiRaidGenerator extends LightningElement {
     @track meetingNotes = '';
@@ -273,6 +274,99 @@ export default class AiRaidGenerator extends LightningElement {
                 }
             ]
         };
+    }
+
+    async handleCopyToClipboard() {
+        if (!this.raidResults) return;
+
+        const markdown = convertToMarkdown(this.raidResults, 'RAID Log');
+        const success = await copyToClipboard(markdown);
+
+        if (success) {
+            this.showToast('Success', 'RAID log copied to clipboard', 'success');
+        } else {
+            this.showToast('Error', 'Failed to copy to clipboard', 'error');
+        }
+    }
+
+    handleDownloadMarkdown() {
+        if (!this.raidResults) return;
+
+        const markdown = convertToMarkdown(this.raidResults, 'RAID Log');
+        const filename = generateFilename('RAID_Log', 'md');
+        downloadFile(markdown, filename, 'text/markdown');
+        this.showToast('Success', 'Markdown file downloaded', 'success');
+    }
+
+    handleDownloadCSV() {
+        if (!this.raidResults) return;
+
+        const csvData = [];
+
+        if (this.raidResults.risks) {
+            this.raidResults.risks.forEach(item => {
+                csvData.push({
+                    Type: 'Risk',
+                    Description: item.description,
+                    Severity: item.severity,
+                    Impact: item.impact,
+                    Owner: item.owner,
+                    DueDate: item.dueDate,
+                    Mitigation: item.mitigation,
+                    Status: item.status
+                });
+            });
+        }
+
+        if (this.raidResults.assumptions) {
+            this.raidResults.assumptions.forEach(item => {
+                csvData.push({
+                    Type: 'Assumption',
+                    Description: item.description,
+                    Severity: item.severity,
+                    Impact: item.impact,
+                    Owner: item.owner,
+                    DueDate: item.dueDate,
+                    Mitigation: item.mitigation,
+                    Status: item.status
+                });
+            });
+        }
+
+        if (this.raidResults.issues) {
+            this.raidResults.issues.forEach(item => {
+                csvData.push({
+                    Type: 'Issue',
+                    Description: item.description,
+                    Severity: item.severity,
+                    Impact: item.impact,
+                    Owner: item.owner,
+                    DueDate: item.dueDate,
+                    Mitigation: item.mitigation,
+                    Status: item.status
+                });
+            });
+        }
+
+        if (this.raidResults.dependencies) {
+            this.raidResults.dependencies.forEach(item => {
+                csvData.push({
+                    Type: 'Dependency',
+                    Description: item.description,
+                    Severity: item.severity,
+                    Impact: item.impact,
+                    Owner: item.owner,
+                    DueDate: item.dueDate,
+                    Mitigation: item.mitigation,
+                    Status: item.status
+                });
+            });
+        }
+
+        const csv = convertToCSV(csvData);
+        const filename = generateFilename('RAID_Log', 'csv');
+        downloadFile(csv, filename, 'text/csv');
+        this.showToast('Success', 'CSV file downloaded', 'success');
     }
 
     showToast(title, message, variant) {

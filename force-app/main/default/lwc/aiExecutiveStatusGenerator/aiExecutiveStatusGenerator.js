@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
+import { copyToClipboard, downloadFile, convertToMarkdown, convertToCSV, generateFilename } from 'c/exportUtility';
 
 export default class AiExecutiveStatusGenerator extends LightningElement {
     @track projectNotes = '';
@@ -212,6 +213,83 @@ export default class AiExecutiveStatusGenerator extends LightningElement {
                 description: 'Begin comprehensive user acceptance testing with all identified personas across core business processes'
             }
         };
+    }
+
+    async handleCopyToClipboard() {
+        if (!this.statusResults) return;
+
+        const markdown = convertToMarkdown(this.statusResults, 'Executive Status Report');
+        const success = await copyToClipboard(markdown);
+
+        if (success) {
+            this.showToast('Success', 'Executive status copied to clipboard', 'success');
+        } else {
+            this.showToast('Error', 'Failed to copy to clipboard', 'error');
+        }
+    }
+
+    handleDownloadMarkdown() {
+        if (!this.statusResults) return;
+
+        const markdown = convertToMarkdown(this.statusResults, 'Executive Status Report');
+        const filename = generateFilename('Executive_Status_Report', 'md');
+        downloadFile(markdown, filename, 'text/markdown');
+        this.showToast('Success', 'Markdown file downloaded', 'success');
+    }
+
+    handleDownloadCSV() {
+        if (!this.statusResults) return;
+
+        const csvData = [];
+
+        csvData.push({
+            Category: 'Project Health',
+            Item: this.statusResults.projectHealth,
+            Description: '',
+            Owner: '',
+            Status: ''
+        });
+
+        if (this.statusResults.keyAccomplishments) {
+            this.statusResults.keyAccomplishments.forEach(acc => {
+                csvData.push({
+                    Category: 'Key Accomplishment',
+                    Item: acc.description,
+                    Description: '',
+                    Owner: '',
+                    Status: ''
+                });
+            });
+        }
+
+        if (this.statusResults.risksAndBlockers) {
+            this.statusResults.risksAndBlockers.forEach(risk => {
+                csvData.push({
+                    Category: 'Risk/Blocker',
+                    Item: risk.title,
+                    Description: risk.description,
+                    Owner: '',
+                    Status: risk.severity
+                });
+            });
+        }
+
+        if (this.statusResults.recommendedNextActions) {
+            this.statusResults.recommendedNextActions.forEach(action => {
+                csvData.push({
+                    Category: 'Next Action',
+                    Item: action.description,
+                    Description: '',
+                    Owner: '',
+                    Status: ''
+                });
+            });
+        }
+
+        const csv = convertToCSV(csvData);
+        const filename = generateFilename('Executive_Status_Report', 'csv');
+        downloadFile(csv, filename, 'text/csv');
+        this.showToast('Success', 'CSV file downloaded', 'success');
     }
 
     showToast(title, message, variant) {

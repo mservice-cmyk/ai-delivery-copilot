@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
+import { copyToClipboard, downloadFile, convertToMarkdown, convertToCSV, generateFilename } from 'c/exportUtility';
 
 export default class AiUatTestGenerator extends LightningElement {
     @track userStory = '';
@@ -261,6 +262,75 @@ export default class AiUatTestGenerator extends LightningElement {
                 }
             ]
         };
+    }
+
+    async handleCopyToClipboard() {
+        if (!this.testResults) return;
+
+        const markdown = convertToMarkdown(this.testResults, 'UAT Test Cases');
+        const success = await copyToClipboard(markdown);
+
+        if (success) {
+            this.showToast('Success', 'UAT test cases copied to clipboard', 'success');
+        } else {
+            this.showToast('Error', 'Failed to copy to clipboard', 'error');
+        }
+    }
+
+    handleDownloadMarkdown() {
+        if (!this.testResults) return;
+
+        const markdown = convertToMarkdown(this.testResults, 'UAT Test Cases');
+        const filename = generateFilename('UAT_Test_Cases', 'md');
+        downloadFile(markdown, filename, 'text/markdown');
+        this.showToast('Success', 'Markdown file downloaded', 'success');
+    }
+
+    handleDownloadCSV() {
+        if (!this.testResults) return;
+
+        const csvData = [];
+
+        if (this.testResults.testScenarios) {
+            this.testResults.testScenarios.forEach(scenario => {
+                csvData.push({
+                    Category: 'Test Scenario',
+                    Title: scenario.title,
+                    Description: scenario.description,
+                    Priority: this.testResults.priority || '',
+                    Status: ''
+                });
+            });
+        }
+
+        if (this.testResults.testSteps) {
+            this.testResults.testSteps.forEach((step, index) => {
+                csvData.push({
+                    Category: 'Test Step',
+                    Title: `Step ${index + 1}`,
+                    Description: step.description,
+                    Priority: '',
+                    Status: ''
+                });
+            });
+        }
+
+        if (this.testResults.expectedResults) {
+            this.testResults.expectedResults.forEach(result => {
+                csvData.push({
+                    Category: 'Expected Result',
+                    Title: '',
+                    Description: result.description,
+                    Priority: '',
+                    Status: ''
+                });
+            });
+        }
+
+        const csv = convertToCSV(csvData);
+        const filename = generateFilename('UAT_Test_Cases', 'csv');
+        downloadFile(csv, filename, 'text/csv');
+        this.showToast('Success', 'CSV file downloaded', 'success');
     }
 
     showToast(title, message, variant) {

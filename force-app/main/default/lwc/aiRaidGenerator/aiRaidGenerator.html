@@ -95,13 +95,18 @@
                                     </p>
                                 </div>
                                 <div>
+                                    <lightning-button-menu alternative-text="Export" icon-name="utility:download" menu-alignment="right" variant="border-filled">
+                                        <lightning-menu-item label="Copy to Clipboard" icon-name="utility:copy" onclick={handleCopyToClipboard}></lightning-menu-item>
+                                        <lightning-menu-item label="Download as Markdown" icon-name="utility:text" onclick={handleDownloadMarkdown}></lightning-menu-item>
+                                        <lightning-menu-item label="Download as CSV" icon-name="utility:table" onclick={handleDownloadCSV}></lightning-menu-item>
+                                    </lightning-button-menu>
                                     <lightning-button
                                         label="Save"
                                         variant="success"
                                         onclick={handleSaveResults}
                                         disabled={isSaving}
                                         icon-name="utility:save"
-                                        class="slds-m-right_x-small">
+                                        class="slds-m-left_x-small slds-m-right_x-small">
                                     </lightning-button>
                                     <lightning-button
                                         label="Clear Results"

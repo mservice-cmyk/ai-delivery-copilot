@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
+import { copyToClipboard, downloadFile, convertToMarkdown, generateFilename } from 'c/exportUtility';
 
 export default class AiCustomerMeetingPrep extends LightningElement {
     @track customerName = '';
@@ -463,6 +464,28 @@ export default class AiCustomerMeetingPrep extends LightningElement {
 
     get emailIcon() {
         return this.showEmail ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    async handleCopyToClipboard() {
+        if (!this.meetingResults) return;
+
+        const markdown = convertToMarkdown(this.meetingResults, `Customer Meeting Prep - ${this.customerName}`);
+        const success = await copyToClipboard(markdown);
+
+        if (success) {
+            this.showToast('Success', 'Meeting prep copied to clipboard', 'success');
+        } else {
+            this.showToast('Error', 'Failed to copy to clipboard', 'error');
+        }
+    }
+
+    handleDownloadMarkdown() {
+        if (!this.meetingResults) return;
+
+        const markdown = convertToMarkdown(this.meetingResults, `Customer Meeting Prep - ${this.customerName}`);
+        const filename = generateFilename(`Meeting_Prep_${this.customerName.replace(/\s+/g, '_')}`, 'md');
+        downloadFile(markdown, filename, 'text/markdown');
+        this.showToast('Success', 'Markdown file downloaded', 'success');
     }
 
     showToast(title, message, variant) {
