@@ -1,7 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-// TODO: Uncomment when AI_Delivery_Request__c object is available
-// import saveMeetingPrep from '@salesforce/apex/CustomerMeetingPrepController.saveMeetingPrep';
+import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
 
 export default class AiCustomerMeetingPrep extends LightningElement {
     @track customerName = '';
@@ -13,6 +12,7 @@ export default class AiCustomerMeetingPrep extends LightningElement {
     @track isLoading = false;
     @track showResults = false;
     @track meetingResults = null;
+    @track isSaving = false;
 
     // Toggle states for expandable sections
     @track showExecutiveSummary = true;
@@ -102,31 +102,31 @@ export default class AiCustomerMeetingPrep extends LightningElement {
             this.showResults = true;
             this.isLoading = false;
             this.showToast('Success', 'Meeting brief generated successfully', 'success');
-
-            // TODO: Uncomment when AI_Delivery_Request__c object is available
-            // this.saveMeetingData();
         }, 2500);
     }
 
-    // TODO: Implement when AI_Delivery_Request__c object is available
-    // saveMeetingData() {
-    //     const meetingData = {
-    //         meetingType: this.meetingType,
-    //         customerName: this.customerName,
-    //         prompt: this.buildPrompt(),
-    //         generatedResponse: JSON.stringify(this.meetingResults),
-    //         requestDate: new Date().toISOString(),
-    //         status: 'Completed'
-    //     };
-    //
-    //     saveMeetingPrep({ meetingData })
-    //         .then(() => {
-    //             console.log('Meeting prep data saved successfully');
-    //         })
-    //         .catch(error => {
-    //             console.error('Error saving meeting prep data:', error);
-    //         });
-    // }
+    handleSaveResults() {
+        this.isSaving = true;
+
+        const saveRequest = {
+            title: `Meeting Prep - ${this.customerName} (${this.meetingType})`,
+            category: 'Meeting Prep',
+            prompt: this.buildPrompt(),
+            generatedResponse: JSON.stringify(this.meetingResults),
+            status: 'Saved',
+            readinessScore: this.meetingResults.readinessScore
+        };
+
+        saveDeliveryRequest({ request: saveRequest })
+            .then(recordId => {
+                this.isSaving = false;
+                this.showToast('Success', 'Meeting prep saved successfully', 'success');
+            })
+            .catch(error => {
+                this.isSaving = false;
+                this.showToast('Error', 'Failed to save: ' + (error.body?.message || error.message), 'error');
+            });
+    }
 
     buildPrompt() {
         return `Customer: ${this.customerName}\nIndustry: ${this.industry}\nMeeting Type: ${this.meetingType}\nProducts: ${this.selectedProducts.join(', ')}\nGoals: ${this.customerGoals}\nChallenges: ${this.knownChallenges}`;

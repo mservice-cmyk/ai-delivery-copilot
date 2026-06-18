@@ -1,5 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
 
 export default class AiExecutiveStatusGenerator extends LightningElement {
     @track projectNotes = '';
@@ -10,6 +11,7 @@ export default class AiExecutiveStatusGenerator extends LightningElement {
     @track isLoading = false;
     @track showResults = false;
     @track statusResults = null;
+    @track isSaving = false;
 
     handleProjectNotesChange(event) {
         this.projectNotes = event.target.value;
@@ -70,6 +72,32 @@ export default class AiExecutiveStatusGenerator extends LightningElement {
         this.risksBlockers = '';
         this.upcomingMilestones = '';
         this.audience = '';
+    }
+
+    handleSaveResults() {
+        this.isSaving = true;
+
+        const saveRequest = {
+            title: `Executive Status - ${new Date().toLocaleDateString()} (${this.audience})`,
+            category: 'Executive Status',
+            prompt: this.buildPrompt(),
+            generatedResponse: JSON.stringify(this.statusResults),
+            status: 'Saved'
+        };
+
+        saveDeliveryRequest({ request: saveRequest })
+            .then(recordId => {
+                this.isSaving = false;
+                this.showToast('Success', 'Executive status saved successfully', 'success');
+            })
+            .catch(error => {
+                this.isSaving = false;
+                this.showToast('Error', 'Failed to save: ' + (error.body?.message || error.message), 'error');
+            });
+    }
+
+    buildPrompt() {
+        return `Project Notes: ${this.projectNotes}\nMeeting Takeaways: ${this.meetingTakeaways}\nRisks/Blockers: ${this.risksBlockers}\nUpcoming Milestones: ${this.upcomingMilestones}\nAudience: ${this.audience}`;
     }
 
     generateMockStatusResults() {

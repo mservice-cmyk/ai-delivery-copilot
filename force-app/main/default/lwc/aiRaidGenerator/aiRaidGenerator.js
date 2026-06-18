@@ -1,5 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
 
 export default class AiRaidGenerator extends LightningElement {
     @track meetingNotes = '';
@@ -8,6 +9,7 @@ export default class AiRaidGenerator extends LightningElement {
     @track isLoading = false;
     @track showResults = false;
     @track raidResults = null;
+    @track isSaving = false;
 
     riskColumns = [
         { label: 'Risk Description', fieldName: 'description', type: 'text', wrapText: true },
@@ -104,6 +106,32 @@ export default class AiRaidGenerator extends LightningElement {
         this.meetingNotes = '';
         this.statusUpdate = '';
         this.emailContent = '';
+    }
+
+    handleSaveResults() {
+        this.isSaving = true;
+
+        const saveRequest = {
+            title: `RAID Log - ${new Date().toLocaleDateString()}`,
+            category: 'RAID Log',
+            prompt: this.buildPrompt(),
+            generatedResponse: JSON.stringify(this.raidResults),
+            status: 'Saved'
+        };
+
+        saveDeliveryRequest({ request: saveRequest })
+            .then(recordId => {
+                this.isSaving = false;
+                this.showToast('Success', 'RAID log saved successfully', 'success');
+            })
+            .catch(error => {
+                this.isSaving = false;
+                this.showToast('Error', 'Failed to save: ' + (error.body?.message || error.message), 'error');
+            });
+    }
+
+    buildPrompt() {
+        return `Meeting Notes: ${this.meetingNotes}\nStatus Update: ${this.statusUpdate}\nEmail Content: ${this.emailContent}`;
     }
 
     generateMockRAIDResults() {

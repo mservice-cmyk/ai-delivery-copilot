@@ -1,5 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
 
 export default class AiUatTestGenerator extends LightningElement {
     @track userStory = '';
@@ -10,6 +11,7 @@ export default class AiUatTestGenerator extends LightningElement {
     @track isLoading = false;
     @track showResults = false;
     @track testResults = null;
+    @track isSaving = false;
 
     handleUserStoryChange(event) {
         this.userStory = event.target.value;
@@ -65,6 +67,33 @@ export default class AiUatTestGenerator extends LightningElement {
         this.persona = '';
         this.businessProcess = '';
         this.salesforceObjects = '';
+    }
+
+    handleSaveResults() {
+        this.isSaving = true;
+
+        const saveRequest = {
+            title: `UAT Test - ${this.userStory.substring(0, 50)}${this.userStory.length > 50 ? '...' : ''}`,
+            category: 'UAT Test',
+            prompt: this.buildPrompt(),
+            generatedResponse: JSON.stringify(this.testResults),
+            status: 'Saved',
+            readinessScore: this.testResults.readinessScore
+        };
+
+        saveDeliveryRequest({ request: saveRequest })
+            .then(recordId => {
+                this.isSaving = false;
+                this.showToast('Success', 'UAT test results saved successfully', 'success');
+            })
+            .catch(error => {
+                this.isSaving = false;
+                this.showToast('Error', 'Failed to save: ' + (error.body?.message || error.message), 'error');
+            });
+    }
+
+    buildPrompt() {
+        return `User Story: ${this.userStory}\nAcceptance Criteria: ${this.acceptanceCriteria}\nPersona: ${this.persona}\nBusiness Process: ${this.businessProcess}\nSalesforce Objects: ${this.salesforceObjects}`;
     }
 
     generateMockTestResults() {

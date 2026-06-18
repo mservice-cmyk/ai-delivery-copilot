@@ -148,6 +148,13 @@
                         </div>
                         <div slot="actions">
                             <lightning-button
+                                label="Save"
+                                onclick={handleSaveResults}
+                                variant="success"
+                                disabled={isSaving}
+                                class="slds-m-right_x-small">
+                            </lightning-button>
+                            <lightning-button
                                 label="Clear Results"
                                 onclick={handleClearResults}
                                 variant="neutral">
