@@ -148,6 +148,19 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             satisfaction: 88,
             isLoading: false,
             isNavigate: false
+        },
+        {
+            id: 'prompt-library',
+            title: 'Prompt Library',
+            description: 'Browse reusable prompt templates for common delivery scenarios',
+            icon: 'utility:knowledge_base',
+            colorClass: 'purple',
+            badge: 'New',
+            badgeClass: 'badge-new',
+            usageCount: 421,
+            satisfaction: 93,
+            isLoading: false,
+            isNavigate: true
         }
     ];
 
@@ -253,6 +266,9 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
                     case 'meeting-prep':
                         this.navigateToCustomerMeetingPrep();
                         break;
+                    case 'prompt-library':
+                        this.navigateToPromptLibrary();
+                        break;
                     default:
                         break;
                 }
@@ -317,6 +333,15 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             type: 'standard__component',
             attributes: {
                 componentName: 'c__aiCustomerMeetingPrep'
+            }
+        });
+    }
+
+    navigateToPromptLibrary() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__component',
+            attributes: {
+                componentName: 'c__aiPromptLibrary'
             }
         });
     }

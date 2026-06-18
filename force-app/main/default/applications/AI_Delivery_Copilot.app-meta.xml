@@ -13,6 +13,7 @@
     <label>AI Delivery Copilot</label>
     <navType>Standard</navType>
     <tabs>AI_Delivery_Copilot</tabs>
+    <tabs>Prompt_Library</tabs>
     <tabs>UAT_Test_Generator</tabs>
     <tabs>Executive_Status_Generator</tabs>
     <tabs>standard-home</tabs>

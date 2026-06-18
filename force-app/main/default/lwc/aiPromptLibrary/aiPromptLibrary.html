@@ -1,0 +1,122 @@
+<template>
+    <div class="prompt-library-container">
+        <!-- Header Section -->
+        <div class="library-header">
+            <div class="header-content">
+                <lightning-icon icon-name="utility:knowledge_base" size="large" class="header-icon"></lightning-icon>
+                <div class="header-text">
+                    <h1 class="slds-text-heading_large">Prompt Library</h1>
+                    <p class="slds-text-body_small header-subtitle">Reusable prompt templates for common delivery scenarios</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-value">{totalPrompts}</span>
+                    <span class="stat-label">Templates</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{totalUses}</span>
+                    <span class="stat-label">Total Uses</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Section -->
+        <div class="search-section slds-m-bottom_medium">
+            <lightning-input
+                type="search"
+                label="Search Templates"
+                variant="label-hidden"
+                placeholder="Search by name or use case..."
+                value={searchTerm}
+                onchange={handleSearch}
+                class="search-input">
+            </lightning-input>
+        </div>
+
+        <!-- Prompt Cards Grid -->
+        <div class="prompt-cards-grid">
+            <template for:each={filteredPrompts} for:item="prompt">
+                <article key={prompt.id} class="prompt-card">
+                    <div class="prompt-card-header">
+                        <div class="prompt-icon-wrapper" data-color={prompt.colorClass}>
+                            <lightning-icon icon-name={prompt.icon} size="medium" class="prompt-icon"></lightning-icon>
+                        </div>
+                        <lightning-badge label={prompt.category} class="category-badge"></lightning-badge>
+                    </div>
+
+                    <div class="prompt-card-body">
+                        <h3 class="prompt-title">{prompt.name}</h3>
+                        <p class="prompt-description">{prompt.useCase}</p>
+
+                        <!-- Example Input Section -->
+                        <div class="example-section">
+                            <div class="example-header">
+                                <lightning-icon icon-name="utility:info" size="xx-small" class="example-icon"></lightning-icon>
+                                <span class="example-label">Example Input</span>
+                            </div>
+                            <div class="example-content">{prompt.exampleInput}</div>
+                        </div>
+
+                        <!-- Usage Stats -->
+                        <div class="prompt-stats">
+                            <div class="prompt-stat">
+                                <lightning-icon icon-name="utility:chart" size="xx-small" class="stat-icon"></lightning-icon>
+                                <span class="stat-text">{prompt.usageCount} uses</span>
+                            </div>
+                            <div class="prompt-stat">
+                                <lightning-icon icon-name="utility:like" size="xx-small" class="stat-icon"></lightning-icon>
+                                <span class="stat-text">{prompt.satisfaction}% success</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="prompt-card-footer">
+                        <lightning-button
+                            label="Copy Prompt"
+                            variant="neutral"
+                            icon-name="utility:copy"
+                            onclick={handleCopyPrompt}
+                            data-id={prompt.id}
+                            class="copy-button">
+                        </lightning-button>
+                        <lightning-button
+                            label="Launch"
+                            variant="brand"
+                            icon-name="utility:forward"
+                            onclick={handleLaunchFeature}
+                            data-id={prompt.id}
+                            disabled={prompt.isLaunching}
+                            class="launch-button">
+                        </lightning-button>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <template if:true={prompt.isLaunching}>
+                        <div class="card-loading-overlay">
+                            <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+                        </div>
+                    </template>
+                </article>
+            </template>
+        </div>
+
+        <!-- Empty State -->
+        <template if:false={hasPrompts}>
+            <div class="empty-state">
+                <lightning-icon icon-name="utility:search" size="large" class="empty-icon"></lightning-icon>
+                <h3 class="empty-title">No templates found</h3>
+                <p class="empty-text">Try adjusting your search criteria</p>
+            </div>
+        </template>
+
+        <!-- Copy Success Toast -->
+        <template if:true={showCopySuccess}>
+            <div class="copy-toast">
+                <lightning-icon icon-name="utility:success" size="x-small" class="toast-icon"></lightning-icon>
+                <span class="toast-text">Prompt copied to clipboard!</span>
+            </div>
+        </template>
+    </div>
+</template>
