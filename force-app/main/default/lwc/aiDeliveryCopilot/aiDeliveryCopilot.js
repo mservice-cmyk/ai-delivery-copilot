@@ -231,6 +231,10 @@ export default class AiDeliveryCopilot extends LightningElement {
         return this.currentView === 'dashboard';
     }
 
+    get isUserStoryView() {
+        return this.currentView === 'user-stories';
+    }
+
     get isUATView() {
         return this.currentView === 'uat-test-generator';
     }
@@ -258,6 +262,7 @@ export default class AiDeliveryCopilot extends LightningElement {
     get headerTitle() {
         const titles = {
             'dashboard': 'AI Delivery Copilot',
+            'user-stories': 'User Story Generator',
             'uat-test-generator': 'UAT Test Generator',
             'executive-status': 'Executive Status Generator',
             'raid-log': 'RAID Generator',
@@ -270,6 +275,7 @@ export default class AiDeliveryCopilot extends LightningElement {
     get headerSubtitle() {
         const subtitles = {
             'dashboard': 'Executive Dashboard',
+            'user-stories': 'Generate comprehensive user stories with acceptance criteria',
             'uat-test-generator': 'Generate comprehensive UAT test scenarios',
             'executive-status': 'Create executive-level status reports',
             'raid-log': 'Track Risks, Assumptions, Issues, and Dependencies',
@@ -295,6 +301,9 @@ export default class AiDeliveryCopilot extends LightningElement {
         // Switch view based on feature
         setTimeout(() => {
             switch (featureId) {
+                case 'user-stories':
+                    this.currentView = 'user-stories';
+                    break;
                 case 'uat-test-generator':
                     this.currentView = 'uat-test-generator';
                     break;

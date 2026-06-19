@@ -251,6 +251,11 @@
                 </div>
             </template>
 
+            <!-- User Story Generator View -->
+            <template if:true={isUserStoryView}>
+                <c-ai-user-story-generator></c-ai-user-story-generator>
+            </template>
+
             <!-- UAT Test Generator View -->
             <template if:true={isUATView}>
                 <c-ai-uat-test-generator></c-ai-uat-test-generator>

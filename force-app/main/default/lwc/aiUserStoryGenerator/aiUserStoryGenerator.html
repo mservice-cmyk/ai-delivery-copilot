@@ -1,0 +1,226 @@
+<template>
+    <div class="user-story-container">
+        <!-- Header -->
+        <div class="user-story-header">
+            <lightning-icon icon-name="utility:list" size="medium" class="header-icon"></lightning-icon>
+            <div class="header-text">
+                <h1 class="slds-text-heading_large">User Story Generator</h1>
+                <p class="slds-text-body_small slds-text-color_weak">Generate comprehensive user stories with AI-powered analysis</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+            <!-- Requirements Input -->
+            <div class="slds-col slds-size_1-of-1">
+                <lightning-card title="Story Requirements" icon-name="utility:info">
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- Business Requirement -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-textarea
+                                    label="Business Requirement"
+                                    value={businessRequirement}
+                                    onchange={handleBusinessRequirementChange}
+                                    placeholder="Describe the business requirement or feature request..."
+                                    required
+                                    rows="4">
+                                </lightning-textarea>
+                            </div>
+
+                            <!-- User Persona -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="User Persona"
+                                    value={userPersona}
+                                    onchange={handleUserPersonaChange}
+                                    placeholder="e.g., Sales Manager, System Administrator"
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Business Process -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Business Process"
+                                    value={businessProcess}
+                                    onchange={handleBusinessProcessChange}
+                                    placeholder="e.g., Lead Management, Opportunity Tracking"
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Salesforce Objects -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                                <lightning-input
+                                    label="Salesforce Objects"
+                                    value={salesforceObjects}
+                                    onchange={handleSalesforceObjectsChange}
+                                    placeholder="e.g., Account, Contact, Opportunity, Custom__c"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="slds-m-top_medium slds-text-align_center">
+                            <lightning-button
+                                label="Generate User Stories"
+                                variant="brand"
+                                onclick={handleGenerate}
+                                disabled={isGenerateDisabled}
+                                class="generate-button">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-card>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <template if:true={showResults}>
+            <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+                <!-- Story Overview Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="Story Overview" icon-name="utility:summary">
+                        <div slot="actions">
+                            <lightning-button-menu alternative-text="Export" icon-name="utility:download" menu-alignment="right" variant="border-filled">
+                                <lightning-menu-item label="Copy to Clipboard" icon-name="utility:copy" onclick={handleCopyToClipboard}></lightning-menu-item>
+                                <lightning-menu-item label="Download as Markdown" icon-name="utility:text" onclick={handleDownloadMarkdown}></lightning-menu-item>
+                                <lightning-menu-item label="Download as CSV" icon-name="utility:table" onclick={handleDownloadCSV}></lightning-menu-item>
+                            </lightning-button-menu>
+                            <lightning-button
+                                label="Save"
+                                onclick={handleSaveResults}
+                                variant="success"
+                                disabled={isSaving}
+                                class="slds-m-left_x-small slds-m-right_x-small">
+                            </lightning-button>
+                            <lightning-button
+                                label="Clear Results"
+                                onclick={handleClearResults}
+                                variant="neutral">
+                            </lightning-button>
+                        </div>
+                        <div class="slds-p-around_medium">
+                            <div class="overview-grid">
+                                <div class="overview-item">
+                                    <span class="overview-label">Epic:</span>
+                                    <span class="overview-value">{displayEpicName}</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Total Stories:</span>
+                                    <span class="overview-value">{storyCount}</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Total Story Points:</span>
+                                    <span class="overview-value">{totalStoryPoints}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- User Stories Card -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-card title="User Stories" icon-name="utility:snippet">
+                        <div class="slds-p-around_medium">
+                            <template for:each={storyResults.userStories} for:item="story">
+                                <div key={story.id} class="story-item">
+                                    <div class="story-header">
+                                        <h3 class="slds-text-heading_small">
+                                            <lightning-icon icon-name="utility:page" size="x-small" class="story-icon"></lightning-icon>
+                                            {story.title}
+                                        </h3>
+                                        <lightning-badge label={story.storyPoints} class="story-points-badge"></lightning-badge>
+                                    </div>
+                                    <div class="story-content">
+                                        <div class="story-description">
+                                            <strong>User Story:</strong>
+                                            <p class="slds-m-top_x-small">{story.userStory}</p>
+                                        </div>
+                                        <div class="story-acceptance-criteria slds-m-top_small">
+                                            <strong>Acceptance Criteria:</strong>
+                                            <ul class="slds-list_dotted slds-m-top_x-small">
+                                                <template for:each={story.acceptanceCriteria} for:item="criteria">
+                                                    <li key={criteria}>{criteria}</li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                        <template if:true={story.technicalNotes}>
+                                            <div class="story-technical-notes slds-m-top_small">
+                                                <strong>Technical Notes:</strong>
+                                                <p class="slds-m-top_x-small">{story.technicalNotes}</p>
+                                            </div>
+                                        </template>
+                                        <template if:true={story.dependencies}>
+                                            <div class="story-dependencies slds-m-top_small">
+                                                <strong>Dependencies:</strong>
+                                                <p class="slds-m-top_x-small">{story.dependencies}</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Sprint Planning Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Sprint Planning" icon-name="utility:date_time">
+                        <div class="slds-p-around_medium">
+                            <div class="sprint-info">
+                                <p class="slds-m-bottom_small"><strong>Recommended Sprint Distribution:</strong></p>
+                                <ul class="slds-list_dotted">
+                                    <template for:each={storyResults.sprintPlanning} for:item="sprint">
+                                        <li key={sprint.id} class="slds-m-bottom_x-small">
+                                            <strong>{sprint.sprint}:</strong> {sprint.stories} stories ({sprint.points} points)
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+
+                <!-- Estimation Summary Card -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-card title="Estimation Summary" icon-name="utility:chart">
+                        <div class="slds-p-around_medium">
+                            <div class="estimation-info">
+                                <p class="slds-m-bottom_small"><strong>Story Point Breakdown:</strong></p>
+                                <ul class="slds-list_dotted">
+                                    <template for:each={storyResults.estimationBreakdown} for:item="breakdown">
+                                        <li key={breakdown.points} class="slds-m-bottom_x-small">
+                                            <strong>{breakdown.points} points:</strong> {breakdown.count} stories
+                                        </li>
+                                    </template>
+                                </ul>
+                                <p class="slds-m-top_medium">
+                                    <strong>Estimated Duration:</strong> {storyResults.estimatedDuration}
+                                </p>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <div class="loading-content">
+                    <lightning-spinner
+                        alternative-text="Generating user stories..."
+                        size="large"
+                        variant="brand">
+                    </lightning-spinner>
+                    <p class="slds-text-heading_small slds-m-top_medium">
+                        Generating user stories...
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
