@@ -4,10 +4,19 @@
         <div class="dashboard-header">
             <div class="header-content">
                 <div class="header-title-section">
+                    <template if:true={showBackButton}>
+                        <lightning-button-icon
+                            icon-name="utility:back"
+                            variant="bare"
+                            alternative-text="Back to Dashboard"
+                            onclick={handleBackToDashboard}
+                            class="back-button">
+                        </lightning-button-icon>
+                    </template>
                     <lightning-icon icon-name="custom:custom14" size="large" class="header-icon"></lightning-icon>
                     <div class="header-text">
-                        <h1 class="slds-text-heading_large">AI Delivery Copilot</h1>
-                        <p class="slds-text-body_small header-subtitle">Executive Dashboard</p>
+                        <h1 class="slds-text-heading_large">{headerTitle}</h1>
+                        <p class="slds-text-body_small header-subtitle">{headerSubtitle}</p>
                     </div>
                 </div>
                 <div class="header-stats-row">
@@ -36,9 +45,11 @@
             </div>
         </div>
 
-        <!-- Dashboard Content -->
+        <!-- Dynamic Content Area -->
         <div class="dashboard-main-content">
-            <div class="content-wrapper">
+            <!-- Dashboard View -->
+            <template if:true={isDashboardView}>
+                <div class="content-wrapper">
 
                 <!-- Top Row: Readiness Score + Recent Requests -->
                 <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_medium">
@@ -237,7 +248,33 @@
                     </div>
                 </div>
 
-            </div>
+                </div>
+            </template>
+
+            <!-- UAT Test Generator View -->
+            <template if:true={isUATView}>
+                <c-ai-uat-test-generator></c-ai-uat-test-generator>
+            </template>
+
+            <!-- Executive Status Generator View -->
+            <template if:true={isExecutiveStatusView}>
+                <c-ai-executive-status-generator></c-ai-executive-status-generator>
+            </template>
+
+            <!-- RAID Generator View -->
+            <template if:true={isRAIDView}>
+                <c-ai-raid-generator></c-ai-raid-generator>
+            </template>
+
+            <!-- Customer Meeting Prep View -->
+            <template if:true={isMeetingPrepView}>
+                <c-ai-customer-meeting-prep></c-ai-customer-meeting-prep>
+            </template>
+
+            <!-- Prompt Library View -->
+            <template if:true={isPromptLibraryView}>
+                <c-ai-prompt-library></c-ai-prompt-library>
+            </template>
         </div>
 
         <!-- Global Loading Overlay -->

@@ -1,8 +1,7 @@
 import { LightningElement, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-export default class AiPromptLibrary extends NavigationMixin(LightningElement) {
+export default class AiPromptLibrary extends LightningElement {
     @track searchTerm = '';
     @track showCopySuccess = false;
     @track promptTemplates = [];
@@ -290,48 +289,14 @@ Create a comprehensive meeting preparation guide.`,
             isLaunching: p.id === promptId
         }));
 
-        // Navigate to feature
+        // Clear loading state and show info
         setTimeout(() => {
-            this.navigateToFeature(prompt.featureRoute);
-
-            // Clear loading state
             this.promptTemplates = this.promptTemplates.map(p => ({
                 ...p,
                 isLaunching: false
             }));
+            this.showToast('Info', 'Launch features from the main dashboard. Use the back button to return to dashboard.', 'info');
         }, 500);
-    }
-
-    navigateToFeature(route) {
-        switch (route) {
-            case 'user-stories':
-                this.navigateToTab('AI_Delivery_Copilot', { c__view: 'userStories' });
-                break;
-            case 'uat-test-generator':
-                this.navigateToTab('UAT_Test_Generator');
-                break;
-            case 'executive-status':
-                this.navigateToTab('Executive_Status_Generator');
-                break;
-            case 'raid-log':
-                this.navigateToTab('RAID_Generator');
-                break;
-            case 'meeting-prep':
-                this.navigateToTab('Customer_Meeting_Prep');
-                break;
-            default:
-                break;
-        }
-    }
-
-    navigateToTab(apiName, state = {}) {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: apiName
-            },
-            state: state
-        });
     }
 
     showToast(title, message, variant) {

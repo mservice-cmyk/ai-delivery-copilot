@@ -1,8 +1,8 @@
 import { LightningElement, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 
-export default class AiDeliveryCopilot extends NavigationMixin(LightningElement) {
+export default class AiDeliveryCopilot extends LightningElement {
     @track isLoading = false;
+    @track currentView = 'dashboard';
 
     // Mock Dashboard Metrics
     totalRequests = 247;
@@ -81,8 +81,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-success',
             usageCount: 89,
             satisfaction: 94,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         },
         {
             id: 'uat-test-generator',
@@ -94,8 +93,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-info',
             usageCount: 67,
             satisfaction: 91,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         },
         {
             id: 'executive-status',
@@ -107,8 +105,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-warning',
             usageCount: 54,
             satisfaction: 89,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         },
         {
             id: 'raid-log',
@@ -120,8 +117,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-new',
             usageCount: 42,
             satisfaction: 92,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         },
         {
             id: 'meeting-prep',
@@ -133,8 +129,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-default',
             usageCount: 38,
             satisfaction: 96,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         },
         {
             id: 'test-cases',
@@ -146,8 +141,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-neutral',
             usageCount: 31,
             satisfaction: 88,
-            isLoading: false,
-            isNavigate: false
+            isLoading: false
         },
         {
             id: 'prompt-library',
@@ -159,8 +153,7 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             badgeClass: 'badge-new',
             usageCount: 421,
             satisfaction: 93,
-            isLoading: false,
-            isNavigate: true
+            isLoading: false
         }
     ];
 
@@ -234,6 +227,58 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
         return `stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};`;
     }
 
+    get isDashboardView() {
+        return this.currentView === 'dashboard';
+    }
+
+    get isUATView() {
+        return this.currentView === 'uat-test-generator';
+    }
+
+    get isExecutiveStatusView() {
+        return this.currentView === 'executive-status';
+    }
+
+    get isRAIDView() {
+        return this.currentView === 'raid-log';
+    }
+
+    get isMeetingPrepView() {
+        return this.currentView === 'meeting-prep';
+    }
+
+    get isPromptLibraryView() {
+        return this.currentView === 'prompt-library';
+    }
+
+    get showBackButton() {
+        return this.currentView !== 'dashboard';
+    }
+
+    get headerTitle() {
+        const titles = {
+            'dashboard': 'AI Delivery Copilot',
+            'uat-test-generator': 'UAT Test Generator',
+            'executive-status': 'Executive Status Generator',
+            'raid-log': 'RAID Generator',
+            'meeting-prep': 'Customer Meeting Prep',
+            'prompt-library': 'Prompt Library'
+        };
+        return titles[this.currentView] || 'AI Delivery Copilot';
+    }
+
+    get headerSubtitle() {
+        const subtitles = {
+            'dashboard': 'Executive Dashboard',
+            'uat-test-generator': 'Generate comprehensive UAT test scenarios',
+            'executive-status': 'Create executive-level status reports',
+            'raid-log': 'Track Risks, Assumptions, Issues, and Dependencies',
+            'meeting-prep': 'Prepare customer meeting materials',
+            'prompt-library': 'Browse reusable prompt templates'
+        };
+        return subtitles[this.currentView] || 'Executive Dashboard';
+    }
+
     // Event Handlers
     handleFeatureLaunch(event) {
         const featureId = event.currentTarget.dataset.id;
@@ -247,31 +292,26 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
             isLoading: f.id === featureId
         }));
 
-        // Navigate based on feature
+        // Switch view based on feature
         setTimeout(() => {
-            if (feature.isNavigate) {
-                switch (featureId) {
-                    case 'user-stories':
-                        this.navigateToUserStoryGenerator();
-                        break;
-                    case 'uat-test-generator':
-                        this.navigateToUATGenerator();
-                        break;
-                    case 'executive-status':
-                        this.navigateToExecutiveStatusGenerator();
-                        break;
-                    case 'raid-log':
-                        this.navigateToRAIDGenerator();
-                        break;
-                    case 'meeting-prep':
-                        this.navigateToCustomerMeetingPrep();
-                        break;
-                    case 'prompt-library':
-                        this.navigateToPromptLibrary();
-                        break;
-                    default:
-                        break;
-                }
+            switch (featureId) {
+                case 'uat-test-generator':
+                    this.currentView = 'uat-test-generator';
+                    break;
+                case 'executive-status':
+                    this.currentView = 'executive-status';
+                    break;
+                case 'raid-log':
+                    this.currentView = 'raid-log';
+                    break;
+                case 'meeting-prep':
+                    this.currentView = 'meeting-prep';
+                    break;
+                case 'prompt-library':
+                    this.currentView = 'prompt-library';
+                    break;
+                default:
+                    break;
             }
 
             // Clear loading state
@@ -279,70 +319,20 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
                 ...f,
                 isLoading: false
             }));
-        }, 500);
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
+    }
+
+    handleBackToDashboard() {
+        this.currentView = 'dashboard';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     handleQuickAction(event) {
         const actionId = event.currentTarget.dataset.id;
         console.log('Quick action clicked:', actionId);
         // Add quick action handling logic here
-    }
-
-    // Navigation Methods
-    navigateToUserStoryGenerator() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'AI_Delivery_Copilot'
-            },
-            state: {
-                c__view: 'userStories'
-            }
-        });
-    }
-
-    navigateToUATGenerator() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'UAT_Test_Generator'
-            }
-        });
-    }
-
-    navigateToExecutiveStatusGenerator() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'Executive_Status_Generator'
-            }
-        });
-    }
-
-    navigateToRAIDGenerator() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'RAID_Generator'
-            }
-        });
-    }
-
-    navigateToCustomerMeetingPrep() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'Customer_Meeting_Prep'
-            }
-        });
-    }
-
-    navigateToPromptLibrary() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'Prompt_Library'
-            }
-        });
     }
 }
