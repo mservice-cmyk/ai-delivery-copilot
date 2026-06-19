@@ -1,38 +1,77 @@
 /**
  * @description Service class for AI provider integration
  * Handles HTTP callouts to external AI providers using Named Credentials
+ * Supports Claude (Anthropic) and Gemini (Google) APIs
  * @author Salesforce Technical Architect
- * @date 2026-06-18
+ * @date 2026-06-19
  */
 public with sharing class AIService {
 
-    private static final String NAMED_CREDENTIAL = 'callout:AI_Provider';
+    private static final String CLAUDE_NAMED_CREDENTIAL = 'callout:Claude_AI_API';
+    private static final String GEMINI_NAMED_CREDENTIAL = 'callout:Gemini_AI_API';
     private static final Integer TIMEOUT_MS = 120000; // 2 minutes
 
     /**
-     * @description AI provider mode configuration
+     * @description AI provider types
      */
-    public enum AIMode {
-        MOCK,      // Use mock responses (default for testing)
-        REAL       // Use real AI provider API
+    public enum AIProvider {
+        CLAUDE,
+        GEMINI,
+        MOCK
     }
 
-    private static AIMode currentMode = AIMode.MOCK;
+    private static AIProvider currentProvider = null; // Auto-detect by default
 
     /**
-     * @description Set the AI mode (mock or real)
-     * @param mode The mode to set
+     * @description Set the AI provider (for testing or explicit provider selection)
+     * @param provider The provider to use
      */
-    public static void setMode(AIMode mode) {
-        currentMode = mode;
+    public static void setProvider(AIProvider provider) {
+        currentProvider = provider;
     }
 
     /**
-     * @description Get the current AI mode
-     * @return AIMode The current mode
+     * @description Get the current AI provider (auto-detects if not set)
+     * @return AIProvider The current provider
      */
-    public static AIMode getMode() {
-        return currentMode;
+    public static AIProvider getProvider() {
+        if (currentProvider == null) {
+            currentProvider = detectProvider();
+        }
+        return currentProvider;
+    }
+
+    /**
+     * @description Auto-detect which AI provider is configured
+     * @return AIProvider The detected provider
+     */
+    private static AIProvider detectProvider() {
+        try {
+            // Check for Claude Named Credential
+            List<NamedCredential> claudeNC = [
+                SELECT Id FROM NamedCredential
+                WHERE DeveloperName = 'Claude_AI_API'
+                LIMIT 1
+            ];
+            if (!claudeNC.isEmpty()) {
+                return AIProvider.CLAUDE;
+            }
+
+            // Check for Gemini Named Credential
+            List<NamedCredential> geminiNC = [
+                SELECT Id FROM NamedCredential
+                WHERE DeveloperName = 'Gemini_AI_API'
+                LIMIT 1
+            ];
+            if (!geminiNC.isEmpty()) {
+                return AIProvider.GEMINI;
+            }
+        } catch (Exception e) {
+            System.debug('Error detecting AI provider: ' + e.getMessage());
+        }
+
+        // Default to mock if no provider configured
+        return AIProvider.MOCK;
     }
 
     /**
@@ -43,33 +82,20 @@ public with sharing class AIService {
      * @return AIResponse Parsed AI response
      */
     public static AIResponse callAI(String prompt, String systemContext, Integer maxTokens) {
-        if (currentMode == AIMode.MOCK) {
+        AIProvider provider = getProvider();
+
+        if (provider == AIProvider.MOCK) {
             return createMockResponse(prompt);
         }
 
         try {
-            // Build the request payload
-            Map<String, Object> requestBody = buildRequestPayload(prompt, systemContext, maxTokens);
-
-            // Make the HTTP callout
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(NAMED_CREDENTIAL); // TODO: Add provider-specific endpoint path (e.g., '/v1/messages' for Anthropic, '/chat/completions' for OpenAI)
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json');
-            req.setTimeout(TIMEOUT_MS);
-            req.setBody(JSON.serialize(requestBody));
-
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-
-            // Handle the response
-            if (res.getStatusCode() == 200) {
-                return parseResponse(res.getBody());
+            if (provider == AIProvider.CLAUDE) {
+                return callClaude(prompt, systemContext, maxTokens);
+            } else if (provider == AIProvider.GEMINI) {
+                return callGemini(prompt, systemContext, maxTokens);
             } else {
-                System.debug('AI API Error: ' + res.getStatusCode() + ' - ' + res.getBody());
-                return createErrorResponse('AI provider returned status: ' + res.getStatusCode());
+                return createMockResponse(prompt);
             }
-
         } catch (Exception e) {
             System.debug('AI Service Exception: ' + e.getMessage());
             // Fallback to mock mode on error
@@ -78,114 +104,121 @@ public with sharing class AIService {
     }
 
     /**
-     * @description Build the request payload for the AI provider
-     * TODO: Customize this method based on your AI provider's API format
-     * @param prompt The user prompt
+     * @description Call Claude AI API
+     * @param prompt The prompt
      * @param systemContext System context
-     * @param maxTokens Maximum tokens
-     * @return Map<String, Object> Request payload
+     * @param maxTokens Max tokens
+     * @return AIResponse The response
      */
-    private static Map<String, Object> buildRequestPayload(
-        String prompt,
-        String systemContext,
-        Integer maxTokens
-    ) {
-        // TODO: Adjust payload structure based on your AI provider
-        // Example for Anthropic Claude API:
-        /*
-        return new Map<String, Object>{
-            'model' => 'claude-3-5-sonnet-20241022',
-            'max_tokens' => maxTokens != null ? maxTokens : 4000,
-            'messages' => new List<Map<String, Object>>{
-                new Map<String, Object>{
-                    'role' => 'user',
-                    'content' => prompt
+    private static AIResponse callClaude(String prompt, String systemContext, Integer maxTokens) {
+        try {
+            Map<String, Object> requestBody = new Map<String, Object>{
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => maxTokens != null ? maxTokens : 4000,
+                'system' => systemContext != null ? systemContext : '',
+                'messages' => new List<Map<String, Object>>{
+                    new Map<String, Object>{
+                        'role' => 'user',
+                        'content' => prompt
+                    }
                 }
-            },
-            'system' => systemContext != null ? systemContext : ''
-        };
-        */
+            };
 
-        // Example for OpenAI API:
-        /*
-        List<Map<String, Object>> messages = new List<Map<String, Object>>();
-        if (String.isNotBlank(systemContext)) {
-            messages.add(new Map<String, Object>{
-                'role' => 'system',
-                'content' => systemContext
-            });
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(CLAUDE_NAMED_CREDENTIAL + '/v1/messages');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setTimeout(TIMEOUT_MS);
+            req.setBody(JSON.serialize(requestBody));
+
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            if (res.getStatusCode() == 200) {
+                Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+                List<Object> content = (List<Object>) responseBody.get('content');
+                if (content != null && !content.isEmpty()) {
+                    Map<String, Object> firstContent = (Map<String, Object>) content[0];
+                    String text = (String) firstContent.get('text');
+                    return new AIResponse(text, true, 'Claude', null);
+                }
+            } else {
+                System.debug('Claude API Error: ' + res.getStatusCode() + ' - ' + res.getBody());
+                return createErrorResponse('Claude API returned status: ' + res.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.debug('Claude callout exception: ' + e.getMessage());
+            return createErrorResponse('Claude error: ' + e.getMessage());
         }
-        messages.add(new Map<String, Object>{
-            'role' => 'user',
-            'content' => prompt
-        });
 
-        return new Map<String, Object>{
-            'model' => 'gpt-4',
-            'messages' => messages,
-            'max_tokens' => maxTokens != null ? maxTokens : 4000
-        };
-        */
-
-        // Generic placeholder - customize based on your provider
-        return new Map<String, Object>{
-            'prompt' => prompt,
-            'system' => systemContext,
-            'max_tokens' => maxTokens != null ? maxTokens : 4000
-        };
+        return createErrorResponse('Unknown Claude error');
     }
 
     /**
-     * @description Parse the AI provider response
-     * TODO: Customize this method based on your AI provider's response format
-     * @param responseBody The raw response body
-     * @return AIResponse Parsed response
+     * @description Call Gemini AI API
+     * @param prompt The prompt
+     * @param systemContext System context
+     * @param maxTokens Max tokens
+     * @return AIResponse The response
      */
-    private static AIResponse parseResponse(String responseBody) {
+    private static AIResponse callGemini(String prompt, String systemContext, Integer maxTokens) {
         try {
-            Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(responseBody);
+            // Gemini doesn't have separate system context, so merge it with prompt
+            String fullPrompt = String.isNotBlank(systemContext)
+                ? systemContext + '\n\n' + prompt
+                : prompt;
 
-            // TODO: Adjust parsing logic based on your AI provider
-            // Example for Anthropic Claude API:
-            /*
-            List<Object> contentArray = (List<Object>) jsonResponse.get('content');
-            if (contentArray != null && !contentArray.isEmpty()) {
-                Map<String, Object> firstContent = (Map<String, Object>) contentArray[0];
-                String text = (String) firstContent.get('text');
+            Map<String, Object> requestBody = new Map<String, Object>{
+                'contents' => new List<Map<String, Object>>{
+                    new Map<String, Object>{
+                        'parts' => new List<Map<String, String>>{
+                            new Map<String, String>{
+                                'text' => fullPrompt
+                            }
+                        }
+                    }
+                },
+                'generationConfig' => new Map<String, Object>{
+                    'maxOutputTokens' => maxTokens != null ? maxTokens : 4000,
+                    'temperature' => 0.7
+                }
+            };
 
-                return new AIResponse(
-                    text,
-                    true,
-                    (String) jsonResponse.get('model'),
-                    null
-                );
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(GEMINI_NAMED_CREDENTIAL + '/v1beta/models/gemini-1.5-pro-latest:generateContent');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setTimeout(TIMEOUT_MS);
+            req.setBody(JSON.serialize(requestBody));
+
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            if (res.getStatusCode() == 200) {
+                Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+                List<Object> candidates = (List<Object>) responseBody.get('candidates');
+                if (candidates != null && !candidates.isEmpty()) {
+                    Map<String, Object> firstCandidate = (Map<String, Object>) candidates[0];
+                    Map<String, Object> content = (Map<String, Object>) firstCandidate.get('content');
+                    List<Object> parts = (List<Object>) content.get('parts');
+                    if (parts != null && !parts.isEmpty()) {
+                        Map<String, Object> firstPart = (Map<String, Object>) parts[0];
+                        String text = (String) firstPart.get('text');
+                        return new AIResponse(text, true, 'Gemini', null);
+                    }
+                }
+            } else {
+                System.debug('Gemini API Error: ' + res.getStatusCode() + ' - ' + res.getBody());
+                return createErrorResponse('Gemini API returned status: ' + res.getStatusCode());
             }
-            */
-
-            // Example for OpenAI API:
-            /*
-            List<Object> choices = (List<Object>) jsonResponse.get('choices');
-            if (choices != null && !choices.isEmpty()) {
-                Map<String, Object> firstChoice = (Map<String, Object>) choices[0];
-                Map<String, Object> message = (Map<String, Object>) firstChoice.get('message');
-                String content = (String) message.get('content');
-
-                return new AIResponse(
-                    content,
-                    true,
-                    (String) jsonResponse.get('model'),
-                    null
-                );
-            }
-            */
-
-            // Generic fallback
-            return createErrorResponse('Unable to parse AI response');
-
         } catch (Exception e) {
-            return createErrorResponse('Response parsing error: ' + e.getMessage());
+            System.debug('Gemini callout exception: ' + e.getMessage());
+            return createErrorResponse('Gemini error: ' + e.getMessage());
         }
+
+        return createErrorResponse('Unknown Gemini error');
     }
+
 
     /**
      * @description Create a mock response for testing
