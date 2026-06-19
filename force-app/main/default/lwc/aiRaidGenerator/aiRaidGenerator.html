@@ -93,6 +93,10 @@
                                     <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
                                         {raidResults.summary}
                                     </p>
+                                    <div class="slds-m-top_xx-small">
+                                        <lightning-badge label={raidResults.aiProvider} icon-name="utility:einstein"></lightning-badge>
+                                        <lightning-badge label={raidResults.readinessScore} icon-name="utility:percent" class="slds-m-left_xx-small"></lightning-badge>
+                                    </div>
                                 </div>
                                 <div>
                                     <lightning-button-menu alternative-text="Export" icon-name="utility:download" menu-alignment="right" variant="border-filled">

@@ -13,11 +13,6 @@
     <label>AI Delivery Copilot</label>
     <navType>Standard</navType>
     <tabs>AI_Delivery_Copilot</tabs>
-    <tabs>Prompt_Library</tabs>
-    <tabs>UAT_Test_Generator</tabs>
-    <tabs>Executive_Status_Generator</tabs>
-    <tabs>RAID_Generator</tabs>
-    <tabs>Customer_Meeting_Prep</tabs>
     <tabs>standard-home</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

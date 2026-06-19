@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveDeliveryRequest from '@salesforce/apex/AIDeliveryRequestController.saveDeliveryRequest';
+import analyzeRAID from '@salesforce/apex/RAIDAnalysisService.analyzeRAID';
 import { copyToClipboard, downloadFile, convertToMarkdown, convertToCSV, generateFilename } from 'c/exportUtility';
 
 export default class AiRaidGenerator extends LightningElement {
@@ -92,13 +93,75 @@ export default class AiRaidGenerator extends LightningElement {
         this.isLoading = true;
         this.showResults = false;
 
-        // Simulate AI API call with mock data
-        setTimeout(() => {
-            this.raidResults = this.generateMockRAIDResults();
-            this.showResults = true;
-            this.isLoading = false;
-            this.showToast('Success', 'RAID Log generated successfully', 'success');
-        }, 2000);
+        // Build request for Apex service
+        const request = {
+            meetingNotes: this.meetingNotes,
+            statusUpdate: this.statusUpdate,
+            emailContent: this.emailContent,
+            provider: 'MOCK' // Will attempt real AI if configured, fallback to mock
+        };
+
+        // Call Apex service for AI-powered RAID analysis
+        analyzeRAID({ requestJson: JSON.stringify(request) })
+            .then(responseJson => {
+                const response = JSON.parse(responseJson);
+
+                if (response.success) {
+                    // Transform response to match UI structure
+                    this.raidResults = {
+                        summary: response.summary || 'RAID analysis completed',
+                        aiProvider: response.aiProvider || 'Mock',
+                        readinessScore: response.readinessScore || 75,
+                        risks: this.transformRAIDItems(response.risks),
+                        assumptions: this.transformRAIDItems(response.assumptions),
+                        issues: this.transformRAIDItems(response.issues),
+                        dependencies: this.transformRAIDItems(response.dependencies),
+                        recommendedNextActions: response.recommendedNextActions || []
+                    };
+
+                    this.showResults = true;
+                    this.isLoading = false;
+
+                    // Show success message with AI provider info
+                    const providerInfo = response.aiProvider.includes('Mock')
+                        ? ' (Using mock data - configure Named Credential for real AI)'
+                        : ` (Powered by ${response.aiProvider})`;
+
+                    this.showToast('Success', 'RAID Log generated successfully' + providerInfo, 'success');
+                } else {
+                    throw new Error(response.errorMessage || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                console.error('RAID analysis error:', error);
+                this.isLoading = false;
+
+                // Fallback to mock data on error
+                this.raidResults = this.generateMockRAIDResults();
+                this.showResults = true;
+
+                this.showToast('Warning',
+                    'Using mock data. Error: ' + (error.body?.message || error.message),
+                    'warning');
+            });
+    }
+
+    /**
+     * Transform RAID items from Apex response to UI format
+     */
+    transformRAIDItems(items) {
+        if (!items || !Array.isArray(items)) return [];
+
+        return items.map(item => ({
+            id: item.id,
+            description: item.description,
+            severity: item.severity,
+            impact: item.impact,
+            owner: item.owner,
+            dueDate: item.dueDate,
+            mitigation: item.mitigation,
+            status: item.status
+        }));
     }
 
     handleClearResults() {
