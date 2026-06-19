@@ -1,7 +1,7 @@
 /**
  * @description Service class for AI provider integration
  * Handles HTTP callouts to external AI providers using Named Credentials
- * Supports Claude (Anthropic) and Gemini (Google) APIs
+ * Supports Claude (Anthropic) and Gemini (Google) APIs with Demo Mode fallback
  * @author Salesforce Technical Architect
  * @date 2026-06-19
  */
@@ -17,10 +17,19 @@ public with sharing class AIService {
     public enum AIProvider {
         CLAUDE,
         GEMINI,
-        MOCK
+        DEMO
+    }
+
+    /**
+     * @description AI mode (Live vs Demo)
+     */
+    public enum AIMode {
+        LIVE,  // Using real AI provider
+        DEMO   // Using demo/mock responses
     }
 
     private static AIProvider currentProvider = null; // Auto-detect by default
+    private static AIMode currentMode = null; // Auto-detect by default
 
     /**
      * @description Set the AI provider (for testing or explicit provider selection)
@@ -42,6 +51,49 @@ public with sharing class AIService {
     }
 
     /**
+     * @description Get the current AI mode (Live or Demo)
+     * @return AIMode The current mode
+     */
+    public static AIMode getMode() {
+        if (currentMode == null) {
+            AIProvider provider = getProvider();
+            currentMode = (provider == AIProvider.DEMO) ? AIMode.DEMO : AIMode.LIVE;
+        }
+        return currentMode;
+    }
+
+    /**
+     * @description Get human-readable AI source name
+     * @return String The AI source name for display
+     */
+    public static String getAISourceName() {
+        AIProvider provider = getProvider();
+        switch on provider {
+            when CLAUDE {
+                return 'Claude';
+            }
+            when GEMINI {
+                return 'Gemini';
+            }
+            when DEMO {
+                return 'Demo Mode';
+            }
+            when else {
+                return 'Unknown';
+            }
+        }
+    }
+
+    /**
+     * @description Get badge icon for AI source
+     * @return String The badge icon (emoji)
+     */
+    public static String getAISourceBadge() {
+        AIMode mode = getMode();
+        return (mode == AIMode.LIVE) ? '🟢 Live AI' : '🟡 Demo Mode';
+    }
+
+    /**
      * @description Auto-detect which AI provider is configured
      * @return AIProvider The detected provider
      */
@@ -54,6 +106,7 @@ public with sharing class AIService {
                 LIMIT 1
             ];
             if (!claudeNC.isEmpty()) {
+                System.debug('AIService: Claude Named Credential detected - Live AI Mode');
                 return AIProvider.CLAUDE;
             }
 
@@ -64,14 +117,16 @@ public with sharing class AIService {
                 LIMIT 1
             ];
             if (!geminiNC.isEmpty()) {
+                System.debug('AIService: Gemini Named Credential detected - Live AI Mode');
                 return AIProvider.GEMINI;
             }
         } catch (Exception e) {
-            System.debug('Error detecting AI provider: ' + e.getMessage());
+            System.debug('AIService: Error detecting AI provider: ' + e.getMessage());
         }
 
-        // Default to mock if no provider configured
-        return AIProvider.MOCK;
+        // Default to Demo Mode if no provider configured
+        System.debug('AIService: No Named Credential configured - Demo Mode active');
+        return AIProvider.DEMO;
     }
 
     /**
@@ -83,23 +138,34 @@ public with sharing class AIService {
      */
     public static AIResponse callAI(String prompt, String systemContext, Integer maxTokens) {
         AIProvider provider = getProvider();
+        String logPrefix = 'AIService.callAI: ';
 
-        if (provider == AIProvider.MOCK) {
-            return createMockResponse(prompt);
+        System.debug(logPrefix + 'Provider=' + provider + ', Mode=' + getMode());
+
+        if (provider == AIProvider.DEMO) {
+            System.debug(logPrefix + 'Using Demo Mode responses');
+            return createDemoResponse(prompt);
         }
 
         try {
             if (provider == AIProvider.CLAUDE) {
-                return callClaude(prompt, systemContext, maxTokens);
+                System.debug(logPrefix + 'Calling Claude API');
+                AIResponse response = callClaude(prompt, systemContext, maxTokens);
+                System.debug(logPrefix + 'Claude API call ' + (response.success ? 'succeeded' : 'failed'));
+                return response;
             } else if (provider == AIProvider.GEMINI) {
-                return callGemini(prompt, systemContext, maxTokens);
+                System.debug(logPrefix + 'Calling Gemini API');
+                AIResponse response = callGemini(prompt, systemContext, maxTokens);
+                System.debug(logPrefix + 'Gemini API call ' + (response.success ? 'succeeded' : 'failed'));
+                return response;
             } else {
-                return createMockResponse(prompt);
+                System.debug(logPrefix + 'Unknown provider, falling back to Demo Mode');
+                return createDemoResponse(prompt);
             }
         } catch (Exception e) {
-            System.debug('AI Service Exception: ' + e.getMessage());
-            // Fallback to mock mode on error
-            return createMockResponse(prompt);
+            System.debug(logPrefix + 'Exception occurred: ' + e.getMessage() + ', falling back to Demo Mode');
+            // Fallback to Demo Mode on error
+            return createDemoResponse(prompt);
         }
     }
 
@@ -221,14 +287,15 @@ public with sharing class AIService {
 
 
     /**
-     * @description Create a mock response for testing
+     * @description Create a demo response for testing/demo purposes
      * @param prompt The original prompt
-     * @return AIResponse Mock response
+     * @return AIResponse Demo response
      */
-    private static AIResponse createMockResponse(String prompt) {
-        String mockContent = 'Mock AI Response: This is a simulated response for prompt: ' +
-                           prompt.left(100) + '...';
-        return new AIResponse(mockContent, true, 'mock-model', null);
+    private static AIResponse createDemoResponse(String prompt) {
+        String demoContent = 'Demo AI Response: This is a realistic simulated response. ' +
+                           'Configure Named Credentials (Claude_AI_API or Gemini_AI_API) to enable Live AI. ' +
+                           'Prompt preview: ' + prompt.left(100) + '...';
+        return new AIResponse(demoContent, true, 'Demo Mode', null);
     }
 
     /**

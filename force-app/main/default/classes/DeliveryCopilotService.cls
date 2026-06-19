@@ -1,6 +1,6 @@
 /**
  * @description Service class for AI Delivery Copilot
- * Generates mock responses for delivery acceleration actions
+ * Generates responses for delivery acceleration actions with Live AI or Demo Mode
  * @author Salesforce Technical Architect
  * @date 2026-06-17
  */
@@ -297,16 +297,16 @@ public with sharing class DeliveryCopilotService {
      */
     public static DeliveryResponse reviewSolutionDesign(String userRequest) {
         // Check if AI integration is available
-        if (AIService.getMode() == AIService.AIMode.REAL) {
+        if (AIService.getMode() == AIService.AIMode.LIVE) {
             try {
                 return reviewSolutionDesignWithAI(userRequest);
             } catch (Exception e) {
-                System.debug('AI integration failed, falling back to mock: ' + e.getMessage());
-                // Fall through to mock response
+                System.debug('AI integration failed, falling back to demo mode: ' + e.getMessage());
+                // Fall through to demo response
             }
         }
 
-        // Default mock response (fallback or when in mock mode)
+        // Default demo response (fallback or when in demo mode)
         DeliveryResponse response = new DeliveryResponse();
         response.actionType = 'Review Solution Design';
         response.timestamp = DateTime.now();

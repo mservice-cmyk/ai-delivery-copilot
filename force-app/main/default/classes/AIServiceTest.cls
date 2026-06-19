@@ -8,17 +8,22 @@
 private class AIServiceTest {
 
     /**
-     * @description Test mock mode (when no providers configured)
+     * @description Test demo mode (when no providers configured)
      */
     @IsTest
-    static void testMockMode() {
+    static void testDemoMode() {
         Test.startTest();
 
-        // Force mock mode
-        AIService.setProvider(AIService.AIProvider.MOCK);
-        System.assertEquals(AIService.AIProvider.MOCK, AIService.getProvider(), 'Provider should be MOCK');
+        // Force demo mode
+        AIService.setProvider(AIService.AIProvider.DEMO);
+        System.assertEquals(AIService.AIProvider.DEMO, AIService.getProvider(), 'Provider should be DEMO');
 
-        // Call AI service in mock mode
+        // Verify mode detection
+        System.assertEquals(AIService.AIMode.DEMO, AIService.getMode(), 'Mode should be DEMO');
+        System.assertEquals('Demo Mode', AIService.getAISourceName(), 'Source name should be Demo Mode');
+        System.assertEquals('🟡 Demo Mode', AIService.getAISourceBadge(), 'Badge should be Demo Mode');
+
+        // Call AI service in demo mode
         AIService.AIResponse response = AIService.callAI(
             'Test prompt for solution design review',
             'You are a Salesforce architect',
@@ -27,31 +32,41 @@ private class AIServiceTest {
 
         Test.stopTest();
 
-        // Verify mock response
+        // Verify demo response
         System.assertNotEquals(null, response, 'Response should not be null');
         System.assertEquals(true, response.success, 'Response should be successful');
         System.assertNotEquals(null, response.content, 'Response content should not be null');
-        System.assert(response.content.contains('Mock AI Response'), 'Should contain mock identifier');
+        System.assert(response.content.contains('Demo'), 'Should contain demo identifier');
+        System.assertEquals('Demo Mode', response.model, 'Model should be Demo Mode');
     }
 
     /**
-     * @description Test provider switching
+     * @description Test provider switching and mode detection
      */
     @IsTest
-    static void testProviderSwitch() {
+    static void testProviderSwitchAndMode() {
         Test.startTest();
 
         // Switch to Claude
         AIService.setProvider(AIService.AIProvider.CLAUDE);
         System.assertEquals(AIService.AIProvider.CLAUDE, AIService.getProvider(), 'Provider should be CLAUDE');
+        System.assertEquals(AIService.AIMode.LIVE, AIService.getMode(), 'Mode should be LIVE');
+        System.assertEquals('Claude', AIService.getAISourceName(), 'Source name should be Claude');
+        System.assertEquals('🟢 Live AI', AIService.getAISourceBadge(), 'Badge should be Live AI');
 
         // Switch to Gemini
         AIService.setProvider(AIService.AIProvider.GEMINI);
         System.assertEquals(AIService.AIProvider.GEMINI, AIService.getProvider(), 'Provider should be GEMINI');
+        System.assertEquals(AIService.AIMode.LIVE, AIService.getMode(), 'Mode should be LIVE');
+        System.assertEquals('Gemini', AIService.getAISourceName(), 'Source name should be Gemini');
+        System.assertEquals('🟢 Live AI', AIService.getAISourceBadge(), 'Badge should be Live AI');
 
-        // Switch to Mock
-        AIService.setProvider(AIService.AIProvider.MOCK);
-        System.assertEquals(AIService.AIProvider.MOCK, AIService.getProvider(), 'Provider should be MOCK');
+        // Switch to Demo
+        AIService.setProvider(AIService.AIProvider.DEMO);
+        System.assertEquals(AIService.AIProvider.DEMO, AIService.getProvider(), 'Provider should be DEMO');
+        System.assertEquals(AIService.AIMode.DEMO, AIService.getMode(), 'Mode should be DEMO');
+        System.assertEquals('Demo Mode', AIService.getAISourceName(), 'Source name should be Demo Mode');
+        System.assertEquals('🟡 Demo Mode', AIService.getAISourceBadge(), 'Badge should be Demo Mode');
 
         Test.stopTest();
     }
@@ -115,7 +130,7 @@ private class AIServiceTest {
     }
 
     /**
-     * @description Test Claude with HTTP error
+     * @description Test Claude with HTTP error - should fallback to Demo Mode
      */
     @IsTest
     static void testClaudeHttpError() {
@@ -136,14 +151,14 @@ private class AIServiceTest {
 
         Test.stopTest();
 
-        // Should return error response
+        // Should fallback to Demo Mode on error
         System.assertNotEquals(null, response, 'Response should not be null');
-        System.assertEquals(false, response.success, 'Should indicate failure');
-        System.assertNotEquals(null, response.error, 'Error message should be present');
+        System.assertEquals(true, response.success, 'Should fallback to demo mode successfully');
+        System.assert(response.content.contains('Demo'), 'Should contain demo identifier');
     }
 
     /**
-     * @description Test Gemini with HTTP error
+     * @description Test Gemini with HTTP error - should fallback to Demo Mode
      */
     @IsTest
     static void testGeminiHttpError() {
@@ -164,10 +179,10 @@ private class AIServiceTest {
 
         Test.stopTest();
 
-        // Should return error response
+        // Should fallback to Demo Mode on error
         System.assertNotEquals(null, response, 'Response should not be null');
-        System.assertEquals(false, response.success, 'Should indicate failure');
-        System.assertNotEquals(null, response.error, 'Error message should be present');
+        System.assertEquals(true, response.success, 'Should fallback to demo mode successfully');
+        System.assert(response.content.contains('Demo'), 'Should contain demo identifier');
     }
 
     /**
@@ -177,7 +192,7 @@ private class AIServiceTest {
     static void testNullParameters() {
         Test.startTest();
 
-        AIService.setProvider(AIService.AIProvider.MOCK);
+        AIService.setProvider(AIService.AIProvider.DEMO);
         AIService.AIResponse response = AIService.callAI(
             'Test prompt',
             null,  // null system context
@@ -197,7 +212,7 @@ private class AIServiceTest {
     static void testEmptyParameters() {
         Test.startTest();
 
-        AIService.setProvider(AIService.AIProvider.MOCK);
+        AIService.setProvider(AIService.AIProvider.DEMO);
         AIService.AIResponse response = AIService.callAI(
             '',    // empty prompt
             '',    // empty system context
@@ -211,7 +226,7 @@ private class AIServiceTest {
     }
 
     /**
-     * @description Test provider auto-detection (will default to MOCK in test)
+     * @description Test provider auto-detection (will default to DEMO in test)
      */
     @IsTest
     static void testAutoDetectProvider() {
@@ -223,8 +238,8 @@ private class AIServiceTest {
 
         Test.stopTest();
 
-        // Should default to MOCK since no Named Credentials in test
-        System.assertEquals(AIService.AIProvider.MOCK, detected, 'Should default to MOCK');
+        // Should default to DEMO since no Named Credentials in test
+        System.assertEquals(AIService.AIProvider.DEMO, detected, 'Should default to DEMO');
     }
 
     /**

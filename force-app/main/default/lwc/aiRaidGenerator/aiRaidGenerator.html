@@ -90,12 +90,15 @@
                             <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
                                 <div>
                                     <h2 class="slds-text-heading_medium">RAID Analysis Results</h2>
-                                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                    <div class="slds-m-top_xx-small">
+                                        <lightning-badge label={aiSourceBadge} icon-name="utility:einstein"></lightning-badge>
+                                        <lightning-badge label={aiSourceName} icon-name="utility:info" class="slds-m-left_xx-small"></lightning-badge>
+                                    </div>
+                                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
                                         {raidResults.summary}
                                     </p>
                                     <div class="slds-m-top_xx-small">
-                                        <lightning-badge label={raidResults.aiProvider} icon-name="utility:einstein"></lightning-badge>
-                                        <lightning-badge label={raidResults.readinessScore} icon-name="utility:percent" class="slds-m-left_xx-small"></lightning-badge>
+                                        <lightning-badge label={readinessScoreLabel} icon-name="utility:percent"></lightning-badge>
                                     </div>
                                 </div>
                                 <div>

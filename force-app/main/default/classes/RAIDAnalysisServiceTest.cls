@@ -71,16 +71,18 @@ private class RAIDAnalysisServiceTest {
     }
 
     /**
-     * @description Test RAID analysis with mock provider
+     * @description Test RAID analysis with demo mode (auto-detection)
      */
     @isTest
-    static void testAnalyzeRAIDWithMock() {
+    static void testAnalyzeRAIDWithDemo() {
         // Create test request
         RAIDAnalysisService.RAIDRequest request = new RAIDAnalysisService.RAIDRequest();
         request.meetingNotes = 'Critical issues discussed in standup meeting';
         request.statusUpdate = 'Project is behind schedule';
         request.emailContent = 'Urgent: Need resources ASAP';
-        request.provider = RAIDAnalysisService.AIProvider.MOCK;
+
+        // Force demo mode in test context
+        AIService.setProvider(AIService.AIProvider.DEMO);
 
         Test.startTest();
         String responseJson = RAIDAnalysisService.analyzeRAID(JSON.serialize(request));
@@ -93,7 +95,7 @@ private class RAIDAnalysisServiceTest {
             (RAIDAnalysisService.RAIDResponse) JSON.deserialize(responseJson, RAIDAnalysisService.RAIDResponse.class);
 
         System.assertEquals(true, response.success, 'Analysis should succeed');
-        System.assert(response.aiProvider.contains('Mock'), 'Should use mock provider');
+        System.assert(response.aiProvider.contains('Demo'), 'Should use demo mode');
         System.assertNotEquals(null, response.risks, 'Risks should not be null');
         System.assertNotEquals(null, response.assumptions, 'Assumptions should not be null');
         System.assertNotEquals(null, response.issues, 'Issues should not be null');
@@ -108,12 +110,14 @@ private class RAIDAnalysisServiceTest {
         // Set mock callout
         Test.setMock(HttpCalloutMock.class, new ClaudeMock());
 
+        // Force Claude provider
+        AIService.setProvider(AIService.AIProvider.CLAUDE);
+
         // Create test request
         RAIDAnalysisService.RAIDRequest request = new RAIDAnalysisService.RAIDRequest();
         request.meetingNotes = 'Sprint planning meeting notes';
         request.statusUpdate = 'On track';
         request.emailContent = 'Team sync email';
-        request.provider = RAIDAnalysisService.AIProvider.CLAUDE;
 
         Test.startTest();
         String responseJson = RAIDAnalysisService.analyzeRAID(JSON.serialize(request));
@@ -138,12 +142,14 @@ private class RAIDAnalysisServiceTest {
         // Set mock callout
         Test.setMock(HttpCalloutMock.class, new GeminiMock());
 
+        // Force Gemini provider
+        AIService.setProvider(AIService.AIProvider.GEMINI);
+
         // Create test request
         RAIDAnalysisService.RAIDRequest request = new RAIDAnalysisService.RAIDRequest();
         request.meetingNotes = 'Technical design review';
         request.statusUpdate = 'Architecture finalized';
         request.emailContent = 'Security review complete';
-        request.provider = RAIDAnalysisService.AIProvider.GEMINI;
 
         Test.startTest();
         String responseJson = RAIDAnalysisService.analyzeRAID(JSON.serialize(request));

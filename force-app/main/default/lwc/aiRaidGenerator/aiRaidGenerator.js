@@ -89,6 +89,19 @@ export default class AiRaidGenerator extends LightningElement {
         return this.riskCount + this.assumptionCount + this.issueCount + this.dependencyCount;
     }
 
+    get aiSourceBadge() {
+        return this.raidResults?.aiSourceBadge || '🟡 Demo Mode';
+    }
+
+    get aiSourceName() {
+        return this.raidResults?.aiProvider || 'Demo Mode';
+    }
+
+    get readinessScoreLabel() {
+        const score = this.raidResults?.readinessScore || 0;
+        return `Readiness: ${score}%`;
+    }
+
     handleGenerate() {
         this.isLoading = true;
         this.showResults = false;
@@ -97,8 +110,8 @@ export default class AiRaidGenerator extends LightningElement {
         const request = {
             meetingNotes: this.meetingNotes,
             statusUpdate: this.statusUpdate,
-            emailContent: this.emailContent,
-            provider: 'MOCK' // Will attempt real AI if configured, fallback to mock
+            emailContent: this.emailContent
+            // AIService automatically detects configured provider (Live AI or Demo Mode)
         };
 
         // Call Apex service for AI-powered RAID analysis
@@ -110,7 +123,7 @@ export default class AiRaidGenerator extends LightningElement {
                     // Transform response to match UI structure
                     this.raidResults = {
                         summary: response.summary || 'RAID analysis completed',
-                        aiProvider: response.aiProvider || 'Mock',
+                        aiProvider: response.aiProvider || 'Demo Mode',
                         readinessScore: response.readinessScore || 75,
                         risks: this.transformRAIDItems(response.risks),
                         assumptions: this.transformRAIDItems(response.assumptions),
@@ -123,8 +136,8 @@ export default class AiRaidGenerator extends LightningElement {
                     this.isLoading = false;
 
                     // Show success message with AI provider info
-                    const providerInfo = response.aiProvider.includes('Mock')
-                        ? ' (Using mock data - configure Named Credential for real AI)'
+                    const providerInfo = response.aiProvider.includes('Demo')
+                        ? ' (Using Demo Mode - configure Named Credential for Live AI)'
                         : ` (Powered by ${response.aiProvider})`;
 
                     this.showToast('Success', 'RAID Log generated successfully' + providerInfo, 'success');
@@ -141,7 +154,7 @@ export default class AiRaidGenerator extends LightningElement {
                 this.showResults = true;
 
                 this.showToast('Warning',
-                    'Using mock data. Error: ' + (error.body?.message || error.message),
+                    'Using Demo Mode. Error: ' + (error.body?.message || error.message),
                     'warning');
             });
     }
