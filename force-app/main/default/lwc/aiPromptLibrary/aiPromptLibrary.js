@@ -305,30 +305,30 @@ Create a comprehensive meeting preparation guide.`,
     navigateToFeature(route) {
         switch (route) {
             case 'user-stories':
-                this.navigateToComponent('c__aiDeliveryCopilot', { c__view: 'userStories' });
+                this.navigateToTab('AI_Delivery_Copilot', { c__view: 'userStories' });
                 break;
             case 'uat-test-generator':
-                this.navigateToComponent('c__aiUatTestGenerator');
+                this.navigateToTab('UAT_Test_Generator');
                 break;
             case 'executive-status':
-                this.navigateToComponent('c__aiExecutiveStatusGenerator');
+                this.navigateToTab('Executive_Status_Generator');
                 break;
             case 'raid-log':
-                this.navigateToComponent('c__aiRaidGenerator');
+                this.navigateToTab('RAID_Generator');
                 break;
             case 'meeting-prep':
-                this.navigateToComponent('c__aiCustomerMeetingPrep');
+                this.navigateToTab('Customer_Meeting_Prep');
                 break;
             default:
                 break;
         }
     }
 
-    navigateToComponent(componentName, state = {}) {
+    navigateToTab(apiName, state = {}) {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: componentName
+                apiName: apiName
             },
             state: state
         });

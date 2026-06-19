@@ -291,9 +291,9 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
     // Navigation Methods
     navigateToUserStoryGenerator() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiDeliveryCopilot'
+                apiName: 'AI_Delivery_Copilot'
             },
             state: {
                 c__view: 'userStories'
@@ -303,45 +303,45 @@ export default class AiDeliveryCopilot extends NavigationMixin(LightningElement)
 
     navigateToUATGenerator() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiUatTestGenerator'
+                apiName: 'UAT_Test_Generator'
             }
         });
     }
 
     navigateToExecutiveStatusGenerator() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiExecutiveStatusGenerator'
+                apiName: 'Executive_Status_Generator'
             }
         });
     }
 
     navigateToRAIDGenerator() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiRaidGenerator'
+                apiName: 'RAID_Generator'
             }
         });
     }
 
     navigateToCustomerMeetingPrep() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiCustomerMeetingPrep'
+                apiName: 'Customer_Meeting_Prep'
             }
         });
     }
 
     navigateToPromptLibrary() {
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__aiPromptLibrary'
+                apiName: 'Prompt_Library'
             }
         });
     }

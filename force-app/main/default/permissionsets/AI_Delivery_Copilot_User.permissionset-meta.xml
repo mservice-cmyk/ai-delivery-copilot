@@ -77,4 +77,12 @@
         <tab>Prompt_Library</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>RAID_Generator</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Customer_Meeting_Prep</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
